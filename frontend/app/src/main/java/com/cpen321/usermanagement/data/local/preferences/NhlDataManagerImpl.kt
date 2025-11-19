@@ -6,7 +6,6 @@ import com.cpen321.usermanagement.data.remote.dto.Boxscore
 import com.cpen321.usermanagement.data.remote.dto.Game
 import com.cpen321.usermanagement.data.remote.dto.GameDay
 import com.cpen321.usermanagement.data.remote.dto.GoalieStats
-import com.cpen321.usermanagement.data.remote.dto.PlayerInfo
 import com.cpen321.usermanagement.data.remote.dto.PlayerStats
 import com.cpen321.usermanagement.data.repository.NHLRepository
 import kotlinx.coroutines.async
@@ -122,59 +121,97 @@ class NhlDataManagerImpl @Inject constructor(
         val game = getGameById(gameId) ?: return@coroutineScope emptyList()
         val random = Random(gameId)
 
+        val totalEvents = count
+
+        val categoryQuotas = mutableMapOf(
+            EventCategory.FORWARD to 10,
+            EventCategory.DEFENSE to 7,
+            EventCategory.GOALIE to 2,   // part of the 3
+            EventCategory.TEAM to 1      // part of the 3
+        )
+
+        val teamQuotas = mutableMapOf(
+            "HOME" to totalEvents / 2,    // 20 of 40
+            "AWAY" to totalEvents / 2
+        )
+
         val homeRosterDeferred = async { nhlRepository.getTeamRoster(game.homeTeam.abbrev).getOrNull() }
         val awayRosterDeferred = async { nhlRepository.getTeamRoster(game.awayTeam.abbrev).getOrNull() }
 
         val homeRoster = homeRosterDeferred.await()
         val awayRoster = awayRosterDeferred.await()
 
-        val allPlayers = (homeRoster?.forwards ?: emptyList()) +
-                (homeRoster?.defensemen ?: emptyList()) +
-                (awayRoster?.forwards ?: emptyList()) +
-                (awayRoster?.defensemen ?: emptyList())
+        val homeForwards = homeRoster?.forwards ?: emptyList()
+        val homeDefensemen = homeRoster?.defensemen ?: emptyList()
+        val homeGoalies = homeRoster?.goalies ?: emptyList()
 
-        val allGoalies = (homeRoster?.goalies ?: emptyList()) +
-                (awayRoster?.goalies ?: emptyList())
+        val awayForwards = awayRoster?.forwards ?: emptyList()
+        val awayDefensemen = awayRoster?.defensemen ?: emptyList()
+        val awayGoalies = awayRoster?.goalies ?: emptyList()
 
-        val subjects = listOf("goals", "assists", "hits", "sog", "blockedShots", "toi")
+        val forwards = (homeRoster?.forwards ?: emptyList()) + (awayRoster?.forwards ?: emptyList())
+        val defensemen = (homeRoster?.defensemen ?: emptyList()) + (awayRoster?.defensemen ?: emptyList())
+        val goalies = (homeRoster?.goalies ?: emptyList()) + (awayRoster?.goalies ?: emptyList())
+
+        val forwardSubjects = listOf("goals", "assists", "hits", "sog", "blockedShots", "toi")
+        val defenseSubjects = listOf("goals", "assists", "hits", "sog", "blockedShots", "toi")
+        val goalieSubjects = listOf("saves")
+        val teamSubjects = listOf("goals", "sog", "penaltyMinutes")
 
         val events = mutableListOf<EventCondition>()
 
         repeat(count) {
-            val subject = subjects.random(random)
+            val category = EventCategory.values().random(random) // Pick a random category
+
+            var subject: String? = null
+            var threshold: Int? = null
             val comparison = ComparisonType.GREATER_THAN
-            val threshold = randomThresholdFor(subject)
+            var playerName: String? = null
+            var playerId: Long? = null
+            var teamAbbrev: String? = null
 
-            val isTeamEvent = subject in listOf("penaltyMinutes", "goals", "sog")
-                    && random.nextDouble() < 0.2  // 20% chance for team event
-
-            if (isTeamEvent) {
-                val team = if (random.nextBoolean()) game.homeTeam.abbrev else game.awayTeam.abbrev
-                events += EventCondition(
-                    id = "T${it}_${team}",
-                    category = EventCategory.TEAM,
-                    subject = subject,
-                    comparison = comparison,
-                    threshold = threshold,
-                    teamAbbrev = team
-                )
-            } else {
-                val player = allPlayers.random(random)
-                val category = when (player.positionCode) {
-                    "G" -> EventCategory.GOALIE
-                    "D" -> EventCategory.DEFENSE
-                    else -> EventCategory.FORWARD
+            when (category) {
+                EventCategory.FORWARD -> {
+                    if (forwards.isEmpty()) return@repeat
+                    val player = forwards.random(random)
+                    subject = forwardSubjects.random(random)
+                    threshold = randomThresholdFor(subject, category, random)
+                    playerName = player.fullName
+                    playerId = player.id
                 }
+                EventCategory.DEFENSE -> {
+                    if (defensemen.isEmpty()) return@repeat
+                    val player = defensemen.random(random)
+                    subject = defenseSubjects.random(random)
+                    threshold = randomThresholdFor(subject, category, random)
+                    playerName = player.fullName
+                    playerId = player.id
+                }
+                EventCategory.GOALIE -> {
+                    if (goalies.isEmpty()) return@repeat
+                    val player = goalies.random(random)
+                    subject = goalieSubjects.random(random)
+                    threshold = randomThresholdFor(subject, category, random)
+                    playerName = player.fullName
+                    playerId = player.id
+                }
+                EventCategory.TEAM, EventCategory.PENALTY -> {
+                    subject = teamSubjects.random(random)
+                    teamAbbrev = if (random.nextBoolean()) game.homeTeam.abbrev else game.awayTeam.abbrev
+                    threshold = randomThresholdFor(subject, category, random)
+                }
+            }
 
+            if (subject != null && threshold != null) {
                 events += EventCondition(
-                    id = "P${it}_${player.id}",
+                    id = "${category.name}_${it}",
                     category = category,
-                    subject = subject,
+                    subject = subject!!,
                     comparison = comparison,
-                    threshold = threshold,
-                    playerId = player.id,
-                    playerName = player.fullName,
-                    teamAbbrev = null
+                    threshold = threshold!!,
+                    playerId = playerId,
+                    playerName = playerName,
+                    teamAbbrev = teamAbbrev
                 )
             }
         }
@@ -473,18 +510,51 @@ class NhlDataManagerImpl @Inject constructor(
      * Produce a random, reasonable threshold for a given subject.
      * Tuned to typical hockey stat ranges.
      */
-    private fun randomThresholdFor(subject: String): Int {
-        return when (subject.removePrefix("player.").removePrefix("team.").removePrefix("goalie.")) {
-            "goals" -> (1..2).random()
-            "assists" -> (1..2).random()
-            "hits" -> (2..6).random()
-            "sog" -> (2..7).random()
-            "blockedShots" -> (1..4).random()
-            "toi" -> (12..25).random() // minutes
-            "saves" -> (20..40).random()
-            "goalsAgainst" -> (0..3).random()
-            "penaltyMinutes", "pim" -> (2..12).random()
-            else -> (1..3).random()
+    private fun randomThresholdFor(
+        subject: String,
+        category: EventCategory,
+        random: Random
+    ): Int {
+
+        val cleanSubject = subject.removePrefix("player.")
+            .removePrefix("team.")
+            .removePrefix("goalie.")
+
+        return when (category) {
+
+            EventCategory.FORWARD -> when (cleanSubject) {
+                "goals" -> (1..2).random(random)
+                "assists" -> (1..2).random(random)
+                "hits" -> (2..4).random(random)
+                "sog" -> (3..6).random(random)
+                "blockedShots" -> (1..2).random(random)
+                "toi" -> (18..23).random(random)
+                else -> (1..3).random(random)
+            }
+
+            EventCategory.DEFENSE -> when (cleanSubject) {
+                "goals" -> 1        // rare
+                "assists" -> (1..2).random(random)
+                "hits" -> (2..4).random(random)
+                "sog" -> (1..3).random(random)
+                "blockedShots" -> (2..6).random(random)
+                "toi" -> (18..23).random(random)
+                else -> (1..3).random(random)
+            }
+
+            EventCategory.GOALIE -> when (cleanSubject) {
+                "saves" -> (26..33).random(random)
+                else -> (1..3).random(random)
+            }
+
+            EventCategory.TEAM -> when (cleanSubject) {
+                "goals" -> (2..5).random(random)
+                "sog" -> (27..36).random(random)
+                "penaltyMinutes", "penalties" -> (4..12).random(random)
+                else -> (1..3).random(random)
+            }
+
+            else -> (1..3).random(random)
         }
     }
 }

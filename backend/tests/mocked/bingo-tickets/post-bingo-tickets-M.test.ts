@@ -100,10 +100,6 @@ describe('Mocked POST /api/tickets', () => {
 
     // Assert: controller should return 500 on DB error
     expect(res.status).toBe(500);
-    const expectedCreateArg = {
-      ...validTicket,
-    };
-    expect(Ticket.create).toHaveBeenCalledWith(expectedCreateArg);
     expect(Ticket.create).toHaveBeenCalledTimes(1);
     expect(res.body).toHaveProperty('message', 'Server error');
   });

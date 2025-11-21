@@ -259,4 +259,46 @@ class ChallengesRepositoryImpl @Inject constructor(
         }
     }
 
+
+
+    override suspend fun isTicketUsedInChallenge(ticketId: String): Result<Boolean> {
+        return try {
+            // This is a simple client-side check.
+            // A dedicated backend endpoint could be an even better solution.
+            val challengesResult = getChallenges()
+
+            challengesResult.map { challengesMap ->
+                // 1. `challengesMap.values` gets all the lists:
+                //    [ [pending challenges], [active challenges], [live challenges]... ]
+                // 2. `.flatten()` merges them into one single list:
+                //    [ ChallengeA, ChallengeB, ChallengeC, ChallengeD... ]
+                // 3. `.any()` now safely checks every single challenge in that combined list.
+                val isFound = challengesMap.values.flatten().any { challenge ->
+                    challenge.ticketIds.containsValue(ticketId)
+                }
+
+                if (isFound) {
+                    Log.d(TAG, "!!! Ticket FOUND in a challenge.")
+                } else {
+                    Log.d(TAG, "--- Ticket '$ticketId' was NOT found in any challenge.")
+                }
+
+                isFound // Return the boolean result
+            }
+        } catch (e: java.net.SocketTimeoutException) {
+            Log.e(TAG, "Network timeout while checking ticket usage", e)
+            Result.failure(e)
+        } catch (e: java.net.UnknownHostException) {
+            Log.e(TAG, "Network connection failed while checking ticket usage", e)
+            Result.failure(e)
+        } catch (e: java.io.IOException) {
+            Log.e(TAG, "IO error while checking ticket usage", e)
+            Result.failure(e)
+        } catch (e: retrofit2.HttpException) {
+            Log.e(TAG, "HTTP error while checking ticket usage: ${e.code()}", e)
+            Result.failure(e)
+        }
+    }
+
+
 }

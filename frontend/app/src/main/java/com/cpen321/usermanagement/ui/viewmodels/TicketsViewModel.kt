@@ -8,6 +8,7 @@ import com.cpen321.usermanagement.data.local.preferences.NhlDataManager
 import com.cpen321.usermanagement.data.remote.dto.BingoTicket
 import com.cpen321.usermanagement.data.remote.dto.Game
 import com.cpen321.usermanagement.data.remote.dto.TicketsUiState
+import com.cpen321.usermanagement.data.repository.ChallengesRepository
 import com.cpen321.usermanagement.data.repository.TicketsRepository
 import com.cpen321.usermanagement.ui.navigation.NavigationStateManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,6 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class TicketsViewModel @Inject constructor(
     private val repository: TicketsRepository,
+    private val challengesRepository: ChallengesRepository, // <-- Needed to check if ticket is used in a challenge
+    //private val nhlDataManager: NhlDataManager,
     private val navigationStateManager: NavigationStateManager,
     val nhlDataManager: NhlDataManager
 ) : ViewModel() {
@@ -126,30 +129,15 @@ class TicketsViewModel @Inject constructor(
         }
     }
 
-    fun toggleSquare(ticketId: String, index: Int) {
+    fun checkIfTicketIsUsed(ticket: BingoTicket, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            val currentTickets = _uiState.value.allTickets.toMutableList()
-            val ticketIndex = currentTickets.indexOfFirst { it._id == ticketId }
-            if (ticketIndex == -1) return@launch
-
-            val ticket = currentTickets[ticketIndex]
-            // Handle null or too-short crossedOff lists safely
-            val safeCrossed = ticket.crossedOff
-                ?.toMutableList()
-                ?: MutableList(9) { false }  // default to 9 falses if null or missing
-
-            // Prevent index errors
-            if (index !in safeCrossed.indices) return@launch
-
-            // Toggle the square
-            safeCrossed[index] = !safeCrossed[index]
-
-            // Update locally
-            currentTickets[ticketIndex] = ticket.copy(crossedOff = safeCrossed)
-            _uiState.value = _uiState.value.copy(allTickets = currentTickets)
-
-            // Sync to backend
-            repository.updateCrossedOff(ticketId, safeCrossed)
+            challengesRepository.isTicketUsedInChallenge(ticket._id)
+                .onSuccess { isUsed -> onResult(isUsed) }
+                .onFailure {
+                    // Handle the error appropriately
+                    Log.e("TicketsViewModel", "Failed to check if ticket is used", it)
+                    onResult(false) // Default to false on error
+                }
         }
     }
 

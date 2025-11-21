@@ -20,7 +20,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -169,7 +171,7 @@ fun CreateChallengeScreen(
             // Game Selection Card
             SelectionCard(
                 title = "Select Game",
-                icon = Icons.Default.Build,
+                icon_painter = androidx.compose.ui.res.painterResource(id = R.drawable.hockey_outlined_icon),
                 selectedText = selectedGame?.let { "${it.awayTeam.abbrev} vs ${it.homeTeam.abbrev}" } ?: "Choose a game",
                 onClick = { showGamePicker = true },
                 isSelected = selectedGame != null
@@ -178,7 +180,7 @@ fun CreateChallengeScreen(
             // Ticket Selection Card  
             SelectionCard(
                 title = "Select Bingo Ticket",
-                icon = Icons.Default.Check,
+                icon_painter = androidx.compose.ui.res.painterResource(id = R.drawable.bingo_ticket),
                 selectedText = selectedTicket?.name ?: if (selectedGame != null) "Choose your ticket" else "Select a game first",
                 onClick = { if (selectedGame != null) showTicketPicker = true },
                 isSelected = selectedTicket != null,
@@ -263,7 +265,7 @@ fun CreateChallengeScreen(
 @Composable
 private fun SelectionCard(
     title: String,
-    icon: ImageVector,
+    icon_painter: Painter,
     selectedText: String,
     onClick: () -> Unit,
     isSelected: Boolean,
@@ -288,12 +290,9 @@ private fun SelectionCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (enabled) 
-                    MaterialTheme.colorScheme.primary 
-                else 
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                painter = icon_painter,
+                contentDescription = stringResource(R.string.challenges),
+                modifier = Modifier.size(24.dp)
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(

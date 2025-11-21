@@ -5,7 +5,15 @@ import { computeTicketScore } from '../utils/score.util';
 
 export const createBingoTicket = async (req: Request, res: Response) => {
   try {
-    const { userId, name, game, events, score } = req.body as TicketType;
+    const { userId, name, game, events, score: incomingScore } = req.body as TicketType;
+
+    // If client didn't provide crossedOff or score, use sensible defaults.
+    // crossedOff defaults to all false; score can be computed from crossedOff.
+    const crossedOff: boolean[] = Array.isArray((req.body as any).crossedOff)
+      ? (req.body as any).crossedOff
+      : Array(9).fill(false);
+
+    const score = incomingScore ?? computeTicketScore(crossedOff);
 
     // create ticket with crossedOff and score in a single call
     const newTicket = await Ticket.create({
@@ -13,6 +21,7 @@ export const createBingoTicket = async (req: Request, res: Response) => {
       name,
       game,
       events,
+      crossedOff,
       score,
     });
 

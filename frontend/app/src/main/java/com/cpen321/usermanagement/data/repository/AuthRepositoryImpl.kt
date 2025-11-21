@@ -171,10 +171,24 @@ class AuthRepositoryImpl @Inject constructor(
             if (response.isSuccessful && response.body()?.data != null) {
                 response.body()!!.data!!.user
             } else {
-                Log.e(
-                    TAG,
-                    "Failed to get current user: ${response.body()?.message ?: "Unknown error"}"
-                )
+                // If token is invalid/expired the API may return 401. Clear stored token
+                // so we stop retrying with an expired token and allow the app to prompt
+                // the user to re-authenticate.
+                if (response.code() == 401) {
+                    try {
+                        tokenManager.clearToken()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to clear token after 401", e)
+                    }
+                    RetrofitClient.setAuthToken(null)
+                    Log.w(TAG, "Received 401 while fetching profile - cleared stored token.")
+                } else {
+                    Log.e(
+                        TAG,
+                        "Failed to get current user: ${response.body()?.message ?: "Unknown error"} (code=${response.code()})"
+                    )
+                }
+
                 null
             }
         } catch (e: java.net.SocketTimeoutException) {

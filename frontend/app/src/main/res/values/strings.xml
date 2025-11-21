@@ -43,4 +43,100 @@
     <string name="loading">Loading...</string>
     <string name="checking_authentication">Checking authentication...</string>
     <string name="successful_bio_update">Bio updated successfully!</string>
+    <string name="no_challenges_available">No %1$s challenges available right now.</string>
+    <string name="welcome_to_challenges">Welcome to challenges!</string>
+    <string name="members">Members:</string>
+    <string name="no_members_yet">No members yet.</string>
+    <string name="new_challenge">New Challenge</string>
+    
+    <!-- BingoTicketComposable -->
+    <string name="breakdown">Breakdown:</string>
+    <string name="fields_crossed">Fields crossed: %1$d</string>
+    <string name="rows_columns_diagonals">Rows: %1$d (x3 each)\nColumns: %2$d (x3 each)\nDiagonals: %3$d (x3 each)</string>
+    <string name="bonus_bingo">Bonus (bingo): %1$d</string>
+    <string name="total">Total: %1$d</string>
+    <string name="reset">Reset</string>
+    <string name="delete_ticket">Delete Ticket</string>
+    <string name="n_a">N/A</string>
+    <string name="owner">Owner</string>
+    <string name="you">You</string>
+    
+    <!-- GameCard -->
+    <string name="sog_format">SOG %1$d - %2$d</string>
+    <string name="live">Live</string>
+    <string name="critical">Critical</string>
+    <string name="pre_game">Pre-Game</string>
+    <string name="upcoming">Upcoming</string>
+    <string name="game_final">Final</string>
+    
+    <!-- CreateBingoTicketScreen -->
+    <string name="create_bingo_ticket">Create Bingo Ticket</string>
+    <string name="create">Create</string>
+    <string name="ticket_name">Ticket Name</string>
+    <string name="no_upcoming_games">No upcoming games found.</string>
+    <string name="fill_bingo_ticket">Fill your bingo ticket:</string>
+    <string name="select_game">Select game</string>
+    <string name="tap_to_add">Tap to add</string>
+    
+    <!-- ChallengeDetailsScreen -->
+    <string name="challenge_details">Challenge Details</string>
+    <string name="edit">Edit</string>
+    <string name="challenge_title">Challenge Title</string>
+    <string name="description">Description</string>
+    <string name="members_label">Members</string>
+    <string name="max_members">Max Members</string>
+    <string name="no_members">No members yet</string>
+    <string name="pending_invitations">Pending Invitations</string>
+    <string name="ticket_selected">Ticket selected ✓</string>
+    <string name="no_ticket_selected">No ticket selected</string>
+    <string name="delete_challenge">Delete Challenge</string>
+    <string name="leave_challenge">Leave Challenge</string>
+    <string name="join_challenge">Join Challenge</string>
+    <string name="decline_invitation">Decline Invitation</string>
+    <string name="select_a_ticket">Select a ticket to join:</string>
+    <string name="no_matching_tickets">You don\'t have any tickets for this game.</string>
+    <string name="create_ticket_for_game">Create a ticket for this game</string>
+    
+    <!-- MainScreen -->
+    <string name="welcome_back">Welcome back, %1$s!</string>
+    <string name="predict_hockey">Let\'s predict some hockey!</string>
+    <string name="your_live_upcoming_tickets">Your Live and Upcoming Tickets</string>
+    <string name="live_upcoming_games">Live &amp; Upcoming Games</string>
+    <string name="create_first_ticket">Create Your First Bingo Ticket</string>
+    <string name="start_predicting">Start predicting game events and compete with friends!</string>
+    <string name="create_ticket">Create Ticket</string>
+    
+    <!-- TicketsScreen -->
+    <string name="you_have_no_tickets">You have no bingo tickets.</string>
+    <string name="create_one_now">Create one now</string>
+    
+    <!-- FriendsScreen -->
+    <string name="your_friend_code">Your Friend Code</string>
+    <string name="copy">Copy</string>
+    <string name="enter_friend_code">Enter friend code</string>
+    <string name="send">Send</string>
+    <string name="friend_request_sent">Friend request sent</string>
+    <string name="enter_valid_code">Enter a valid code</string>
+    <string name="friend_code_copied">Friend code copied</string>
+    <string name="pending_requests">Pending Requests</string>
+    <string name="accept">Accept</string>
+    <string name="reject">Reject</string>
+    <string name="friends_list">Friends</string>
+    <string name="no_friends_yet">No friends yet.</string>
+    <string name="remove">Remove</string>
+    
+    <!-- ChallengesScreen -->
+    <string name="delete">Delete</string>
+    
+    <!-- ChallengeDetailsScreen dialogs and buttons -->
+    <string name="delete_challenge_confirm_title">Delete Challenge</string>
+    <string name="delete_challenge_confirm_message">Are you sure you want to permanently delete this challenge? This action cannot be undone.</string>
+    <string name="leave_challenge_confirm_title">Leave Challenge</string>
+    <string name="leave_challenge_confirm_message">Are you sure you want to leave this challenge?</string>
+    <string name="leave">Leave</string>
+    <string name="youre_invited">You\'re Invited!</string>
+    <string name="select_ticket_to_use">Select a ticket to use</string>
+    <string name="your_bingo_ticket">Your Bingo Ticket</string>
+    <string name="create_bingo_ticket_for_game">Create Bingo Ticket for this game!</string>
+    <string name="decline">Decline</string>
 </resources>

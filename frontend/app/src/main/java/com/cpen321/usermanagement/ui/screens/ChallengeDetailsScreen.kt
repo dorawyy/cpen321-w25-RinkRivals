@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -33,6 +34,7 @@ import com.cpen321.usermanagement.data.remote.dto.Game
 import com.cpen321.usermanagement.data.remote.dto.User
 import com.cpen321.usermanagement.ui.components.BingoTicketCard
 import com.cpen321.usermanagement.ui.components.TeamMatchup
+import com.cpen321.usermanagement.ui.components.GameCard
 import com.cpen321.usermanagement.ui.viewmodels.ChallengesViewModel
 import com.cpen321.usermanagement.ui.viewmodels.Friend
 import java.text.SimpleDateFormat
@@ -46,6 +48,7 @@ fun ChallengeDetailsScreen(
     socketManager: SocketManager,
     socketEventListener: SocketEventListener,
     nhlDataManager: NhlDataManager,
+        onCreateTicketClick: (String) -> Unit,
     onBackClick: () -> Unit
 ) {
     val uiState by challengesViewModel.uiState.collectAsState()
@@ -89,7 +92,7 @@ fun ChallengeDetailsScreen(
     val challenge = uiState.selectedChallenge
     val userId = uiState.user?._id
     val allFriends = uiState.allFriends
-    val upcomingGames = uiState.availableGames // Get games list
+    // upcomingGames moved to be resolved by nhlDataManager when needed
     val allTickets = uiState.challengeTickets // This now includes all loaded tickets
 
     if (challenge != null && challenge.id == challengeId) {
@@ -97,7 +100,7 @@ fun ChallengeDetailsScreen(
         val isInvitee = challenge.invitedUserIds.contains(userId)
         val canLeave = !isOwner && challenge.memberIds.contains(userId)
 
-        ChallengeDetailsContent(
+            ChallengeDetailsContent(
             challenge = challenge,
             user = uiState.user,
             isOwner = isOwner,
@@ -133,9 +136,9 @@ fun ChallengeDetailsScreen(
                 challengesViewModel.declineInvitation(challenge.id)
                 onBackClick()
             },
-            upcomingGames = upcomingGames,
             allTickets = allTickets,
-            nhlDataManager = nhlDataManager
+            nhlDataManager = nhlDataManager,
+            onCreateTicketClick = { onCreateTicketClick(challenge.gameId) }
         )
     } else {
         Log.e("ChallengeDetailsScreen", "Challenge not found")
@@ -161,7 +164,7 @@ private fun ChallengeDetailsContent(
     onJoinChallenge: () -> Unit,
     onLeaveChallenge: () -> Unit,
     onDeclineInvitation: () -> Unit,
-    upcomingGames: List<Game>?,
+    onCreateTicketClick: () -> Unit,
     allTickets: List<BingoTicket>?,
     nhlDataManager: NhlDataManager
 ) {
@@ -169,6 +172,7 @@ private fun ChallengeDetailsContent(
     var title by remember { mutableStateOf(challenge.title) }
     var description by remember { mutableStateOf(challenge.description) }
     var maxMembers by remember { mutableStateOf(challenge.maxMembers.toString()) }
+    val game = challenge.gameId.toLongOrNull()?.let { nhlDataManager.getGameById(it) }
 
     val canEdit = isOwner && (challenge.status == ChallengeStatus.PENDING || challenge.status == ChallengeStatus.ACTIVE)
 
@@ -177,7 +181,7 @@ private fun ChallengeDetailsContent(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Challenge Details",
+                        text = stringResource(R.string.challenge_details),
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -185,7 +189,7 @@ private fun ChallengeDetailsContent(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -201,7 +205,7 @@ private fun ChallengeDetailsContent(
                                     maxMembers = challenge.maxMembers.toString()
                                 }
                             ) {
-                                Text("Cancel")
+                                Text(stringResource(R.string.cancel))
                             }
                             Button(
                                 onClick = {
@@ -214,13 +218,13 @@ private fun ChallengeDetailsContent(
                                     isEditing = false
                                 }
                             ) {
-                                Text("Save")
+                                Text(stringResource(R.string.save))
                             }
                         } else {
                             IconButton(onClick = { isEditing = true }) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
-                                    contentDescription = "Edit"
+                                    contentDescription = stringResource(R.string.edit)
                                 )
                             }
                         }
@@ -256,10 +260,13 @@ private fun ChallengeDetailsContent(
                 )
 
                 // Game Information Card
-                GameInfoCard(
-                    challenge = challenge,
-                    upcomingGames = upcomingGames
-                )
+                if (game != null) {
+                    GameCard(
+                        game = game,
+                        nhlDataManager = nhlDataManager,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
                 // Members Section - Clear and Organized
                 MembersSection(
@@ -308,6 +315,7 @@ private fun ChallengeDetailsContent(
                     onTicketSelected = onTicketSelected,
                     onJoinClick = onJoinChallenge,
                     onDeclineClick = onDeclineInvitation,
+                    onCreateTicketClick = onCreateTicketClick,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(16.dp)
@@ -371,7 +379,7 @@ private fun ChallengeTitleSection(
                 OutlinedTextField(
                     value = title,
                     onValueChange = onTitleChange,
-                    label = { Text("Challenge Title") },
+                    label = { Text(stringResource(R.string.challenge_title)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     textStyle = MaterialTheme.typography.headlineMedium.copy(
@@ -392,7 +400,7 @@ private fun ChallengeTitleSection(
                 OutlinedTextField(
                     value = description,
                     onValueChange = onDescriptionChange,
-                    label = { Text("Description") },
+                    label = { Text(stringResource(R.string.description)) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
                     maxLines = 5
@@ -405,101 +413,6 @@ private fun ChallengeTitleSection(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun GameInfoCard(
-    challenge: Challenge,
-    upcomingGames: List<Game>?
-) {
-    // Find the game that matches the challenge's gameId
-    val game = upcomingGames?.firstOrNull { it.id.toString() == challenge.gameId }
-
-    Card(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.hockey_outlined_icon),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = "Game Information",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Divider()
-
-            if (game != null) {
-                // Show game matchup with logos
-                TeamMatchup(
-                    awayTeamLogoUrl = game.awayTeam.logo,
-                    awayTeamAbbrev = game.awayTeam.abbrev,
-                    homeTeamLogoUrl = game.homeTeam.logo,
-                    homeTeamAbbrev = game.homeTeam.abbrev,
-                    modifier = Modifier.fillMaxWidth(),
-                    logoSize = 48.dp,
-                    showAbbrevs = true,
-                    abbrevFontSize = 14.sp,
-                    abbrevColor = MaterialTheme.colorScheme.onSurface,
-                    vsText = "@"
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Show game time
-                Text(
-                    text = formatGameTime(game.startTimeUTC),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                // Show venue
-                Text(
-                    text = game.venue.default,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
-                // Fallback if game data not loaded
-                InfoRow(
-                    icon = R.drawable.hockey_outlined_icon,
-                    label = "Game ID",
-                    value = challenge.gameId
-                )
-            }
-        }
-    }
-}
-
-// Helper function to format game time
-private fun formatGameTime(startTimeUTC: String): String {
-    return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
-        inputFormat.timeZone = TimeZone.getTimeZone("UTC")
-        val date = inputFormat.parse(startTimeUTC)
-        
-        val outputFormat = SimpleDateFormat("EEE, MMM dd 'at' h:mm a", Locale.getDefault())
-        date?.let { outputFormat.format(it) } ?: startTimeUTC
-    } catch (e: Exception) {
-        startTimeUTC
     }
 }
 
@@ -538,7 +451,7 @@ private fun MembersSection(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "Members",
+                        text = stringResource(R.string.members_label),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -563,7 +476,7 @@ private fun MembersSection(
                 OutlinedTextField(
                     value = maxMembers,
                     onValueChange = onMaxMembersChange,
-                    label = { Text("Max Members") },
+                    label = { Text(stringResource(R.string.max_members)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -577,8 +490,8 @@ private fun MembersSection(
                 ) {
                     challenge.memberIds.forEach { memberId ->
                         val memberName = when (memberId) {
-                            challenge.ownerId -> "${allFriends.find { it.id == memberId }?.name ?: user?.name ?: memberId}"
-                            user?._id -> "${user.name}"
+                            challenge.ownerId -> allFriends.find { it.id == memberId }?.name ?: user?.name ?: memberId
+                            user?._id -> user.name
                             else -> allFriends.find { it.id == memberId }?.name ?: memberId
                         }
 
@@ -599,7 +512,7 @@ private fun MembersSection(
                 }
             } else {
                 Text(
-                    text = "No members yet",
+                    text = stringResource(R.string.no_members),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 8.dp)
@@ -641,7 +554,7 @@ private fun InvitedUsersSection(
                         tint = MaterialTheme.colorScheme.secondary
                     )
                     Text(
-                        text = "Pending Invitations",
+                        text = stringResource(R.string.pending_invitations),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -677,49 +590,6 @@ private fun InvitedUsersSection(
 }
 
 @Composable
-private fun MemberRow(
-    name: String,
-    isOwner: Boolean
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Surface(
-            shape = CircleShape,
-            color = if (isOwner) 
-                MaterialTheme.colorScheme.primaryContainer 
-            else 
-                MaterialTheme.colorScheme.surfaceVariant,
-            modifier = Modifier.size(40.dp)
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = if (isOwner) 
-                        MaterialTheme.colorScheme.onPrimaryContainer 
-                    else 
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        Text(
-            text = name,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = if (isOwner) FontWeight.Bold else FontWeight.Normal
-        )
-    }
-}
-
-@Composable
 private fun MemberRowWithTicket(
     name: String,
     isOwner: Boolean,
@@ -728,13 +598,12 @@ private fun MemberRowWithTicket(
     hasTicketId: Boolean,
     nhlDataManager: NhlDataManager
 ) {
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (isYou) 
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-            else 
-                MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceDim,
+            contentColor = MaterialTheme.colorScheme.onSurface
         )
     ) {
         Column(
@@ -788,7 +657,7 @@ private fun MemberRowWithTicket(
                                 color = MaterialTheme.colorScheme.primary
                             ) {
                                 Text(
-                                    text = "Owner",
+                                    text = stringResource(R.string.owner),
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onPrimary
@@ -801,7 +670,7 @@ private fun MemberRowWithTicket(
                                 color = MaterialTheme.colorScheme.secondary
                             ) {
                                 Text(
-                                    text = "You",
+                                    text = stringResource(R.string.you),
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSecondary
@@ -818,13 +687,13 @@ private fun MemberRowWithTicket(
                         )
                     } else if (hasTicketId) {
                         Text(
-                            text = "Ticket selected ✓",
+                            text = stringResource(R.string.ticket_selected),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.tertiary
                         )
                     } else {
                         Text(
-                            text = "No ticket selected",
+                            text = stringResource(R.string.no_ticket_selected),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -844,6 +713,8 @@ private fun MemberRowWithTicket(
         }
     }
 }
+
+
 
 @Composable
 private fun InvitedUserRow(name: String) {
@@ -880,39 +751,6 @@ private fun InvitedUserRow(name: String) {
 }
 
 @Composable
-private fun InfoRow(
-    icon: Int,
-    label: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Icon(
-            painter = painterResource(id = icon),
-            contentDescription = null,
-            modifier = Modifier.size(24.dp)
-        )
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-@Composable
 private fun DeleteChallengeButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -922,8 +760,8 @@ private fun DeleteChallengeButton(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Delete Challenge") },
-            text = { Text("Are you sure you want to permanently delete this challenge? This action cannot be undone.") },
+            title = { Text(stringResource(R.string.delete_challenge_confirm_title)) },
+            text = { Text(stringResource(R.string.delete_challenge_confirm_message)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -934,12 +772,12 @@ private fun DeleteChallengeButton(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -958,7 +796,7 @@ private fun DeleteChallengeButton(
             contentDescription = null
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text("Delete Challenge")
+        Text(stringResource(R.string.delete_challenge))
     }
 }
 
@@ -969,6 +807,7 @@ private fun JoinChallengeCard(
     selectedTicket: BingoTicket?,
     onTicketSelected: (BingoTicket) -> Unit,
     onJoinClick: () -> Unit,
+    onCreateTicketClick: () -> Unit,
     onDeclineClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -986,39 +825,49 @@ private fun JoinChallengeCard(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "You're Invited!",
+                text = stringResource(R.string.youre_invited),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
-            ExposedDropdownMenuBox(
-                expanded = isDropdownExpanded,
-                onExpandedChange = { isDropdownExpanded = !isDropdownExpanded }
-            ) {
-                OutlinedTextField(
-                    value = selectedTicket?.name ?: "Select a ticket to use",
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Your Bingo Ticket") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
-                    colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
-                )
-
-                ExposedDropdownMenu(
-                    expanded = isDropdownExpanded,
-                    onDismissRequest = { isDropdownExpanded = false }
+            if (availableTickets.isEmpty()) {
+                Button(
+                    onClick = {
+                        isDropdownExpanded = false
+                        onCreateTicketClick()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (availableTickets.isEmpty()) {
-                        DropdownMenuItem(
-                            text = { Text("No tickets available for this game") },
-                            onClick = { },
-                            enabled = false
-                        )
-                    } else {
+                    Text(stringResource(R.string.create_bingo_ticket_for_game))
+
+                }
+            } else {
+                ExposedDropdownMenuBox(
+                    expanded = isDropdownExpanded,
+                    onExpandedChange = { isDropdownExpanded = !isDropdownExpanded }
+                ) {
+                    OutlinedTextField(
+                        value = selectedTicket?.name ?: stringResource(R.string.select_ticket_to_use),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text(stringResource(R.string.your_bingo_ticket)) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
+                        colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
+
+
+                    ExposedDropdownMenu(
+                        expanded = isDropdownExpanded,
+                        onDismissRequest = { isDropdownExpanded = false }
+                    ) {
                         availableTickets.forEach { ticket ->
                             DropdownMenuItem(
                                 text = { Text(ticket.name) },
@@ -1043,7 +892,7 @@ private fun JoinChallengeCard(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Decline")
+                    Text(stringResource(R.string.decline))
                 }
 
                 Button(
@@ -1056,7 +905,7 @@ private fun JoinChallengeCard(
                         contentDescription = null
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Accept")
+                    Text(stringResource(R.string.accept))
                 }
             }
         }
@@ -1073,8 +922,8 @@ private fun LeaveChallengeButton(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Leave Challenge") },
-            text = { Text("Are you sure you want to leave this challenge?") },
+            title = { Text(stringResource(R.string.leave_challenge_confirm_title)) },
+            text = { Text(stringResource(R.string.leave_challenge_confirm_message)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -1085,12 +934,12 @@ private fun LeaveChallengeButton(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Leave")
+                    Text(stringResource(R.string.leave))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -1109,6 +958,6 @@ private fun LeaveChallengeButton(
             contentDescription = null
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text("Leave Challenge")
+        Text(stringResource(R.string.leave_challenge))
     }
 }

@@ -35,7 +35,7 @@ data class MainUiState(
 class MainViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val ticketsRepository: TicketsRepository,
-    private val nhlDataManager: NhlDataManager,
+    val nhlDataManager: NhlDataManager,
     val socketManager: SocketManager,
     val socketEventListener: SocketEventListener
 ) : ViewModel() {

@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cpen321.usermanagement.R
 import com.cpen321.usermanagement.data.remote.dto.Game
+import com.cpen321.usermanagement.data.local.preferences.NhlDataManager
+import com.cpen321.usermanagement.ui.components.BingoTicketCard
 import com.cpen321.usermanagement.ui.components.MessageSnackbar
 import com.cpen321.usermanagement.ui.components.MessageSnackbarState
 import com.cpen321.usermanagement.ui.components.TeamMatchup
@@ -74,7 +76,8 @@ fun MainScreen(
         onFriendsClick = onFriendsClick,
         onChallengeClick = onChallengeClick,
         onSuccessMessageShown = mainViewModel::clearSuccessMessage,
-        upcomingGames = nhlDataState.gameSchedule?.flatMap { it.games }?.take(5) ?: emptyList()
+        upcomingGames = nhlDataState.gameSchedule?.flatMap { it.games }?.take(5) ?: emptyList(),
+        nhlDataManager = mainViewModel.nhlDataManager
     )
 }
 
@@ -88,6 +91,7 @@ private fun MainContent(
     onChallengeClick: () -> Unit,
     onSuccessMessageShown: () -> Unit,
     upcomingGames: List<Game>,
+    nhlDataManager: NhlDataManager,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -104,11 +108,12 @@ private fun MainContent(
         }
     ) { paddingValues ->
         MainBody(
-            paddingValues = paddingValues,
-            uiState = uiState,
-            upcomingGames = upcomingGames,
-            onTicketClick = onTicketClick
-        )
+                paddingValues = paddingValues,
+                uiState = uiState,
+                upcomingGames = upcomingGames,
+                onTicketClick = onTicketClick,
+                nhlDataManager = nhlDataManager
+            )
     }
 }
 
@@ -166,6 +171,7 @@ private fun MainBody(
     uiState: MainUiState,
     upcomingGames: List<Game>,
     onTicketClick: () -> Unit,
+    nhlDataManager: NhlDataManager,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -176,16 +182,38 @@ private fun MainBody(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-        
-        // Hero Banner with Animated Puck
-        item {
             HeroBanner(uiState = uiState)
         }
         
-        // Quick Action: Create Ticket Button (if no tickets)
-        if (uiState.userTickets.isEmpty() && !uiState.isLoadingTickets) {
+        // If user has created tickets, show a list of their live tickets.
+        // Otherwise show the prominent "Create Your First Bingo Ticket" card.
+        if (!uiState.userTickets.isNullOrEmpty()) {
+            val liveTickets = uiState.userTickets
+                .filter {
+                    val state = it.game.gameState ?: ""
+                    val u = state.uppercase()
+                    u == "LIVE" || u == "CRIT" || u == "FUT"
+                }
+
+
+            if (liveTickets.isNotEmpty()) {
+                item {
+                    Text(
+                        text = stringResource(R.string.your_live_upcoming_tickets),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+                items(liveTickets) { ticket ->
+                    BingoTicketCard(
+                        ticket = ticket,
+                        nhlDataManager = nhlDataManager,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+            }
+        } else if (uiState.userTickets.isEmpty() && !uiState.isLoadingTickets) {
             item {
                 CreateFirstTicketCard(onClick = onTicketClick)
             }
@@ -194,7 +222,7 @@ private fun MainBody(
         // Upcoming/Live Games Section
         item {
             Text(
-                text = "Live & Upcoming Games",
+                text = stringResource(R.string.live_upcoming_games),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 8.dp)
@@ -202,7 +230,11 @@ private fun MainBody(
         }
         
         items(upcomingGames) { game ->
-            GameCard(game = game)
+            com.cpen321.usermanagement.ui.components.GameCard(
+                game = game,
+                nhlDataManager = nhlDataManager,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
         }
         
         item {
@@ -260,14 +292,14 @@ private fun HeroBanner(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Welcome back, $userName!",
+                    text = stringResource(R.string.welcome_back, userName),
                     color = Color(0xFFCCF2FF),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Let's predict some hockey!",
+                    text = stringResource(R.string.predict_hockey),
                     color = Color(0xFFE0F2FE),
                     fontSize = 14.sp
                 )
@@ -332,14 +364,14 @@ private fun CreateFirstTicketCard(
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Create Your First Bingo Ticket",
+                text = stringResource(R.string.create_first_ticket),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Start predicting game events and compete with friends!",
+                text = stringResource(R.string.start_predicting),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
             )
@@ -354,77 +386,8 @@ private fun CreateFirstTicketCard(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Create Ticket")
+                Text(stringResource(R.string.create_ticket))
             }
-        }
-    }
-}
-
-@Composable
-private fun GameCard(
-    game: Game,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // Game State Badge
-            GameStateBadge(gameState = game.gameState)
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            // Team Matchup
-            TeamMatchup(
-                awayTeamLogoUrl = game.awayTeam.logo,
-                awayTeamAbbrev = game.awayTeam.abbrev,
-                homeTeamLogoUrl = game.homeTeam.logo,
-                homeTeamAbbrev = game.homeTeam.abbrev,
-                modifier = Modifier.fillMaxWidth(),
-                logoSize = 48.dp,
-                showAbbrevs = true,
-                abbrevFontSize = 14.sp,
-                abbrevColor = MaterialTheme.colorScheme.onSurface,
-                vsText = "@"
-            )
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            // Game Time
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    name = R.drawable.calendar_clock_icon,
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = formatGameTime(game.startTimeUTC),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
-            // Venue
-            Text(
-                text = game.venue.default,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp),
-                fontWeight = FontWeight.Normal,
-                textAlign = TextAlign.Center
-            )
-
         }
     }
 }

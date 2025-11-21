@@ -20,6 +20,8 @@ interface ChallengesRepository {
     suspend fun leaveChallenge(challengeId: String): Result<Unit>
 
     suspend fun declineInvitation(challengeId: String): Result<Unit>
+
+    suspend fun isTicketUsedInChallenge(ticketId: String): Result<Boolean>
 }
 
 

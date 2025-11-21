@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,7 +36,8 @@ fun CreateBingoTicketScreen(
     authViewModel: AuthViewModelContract,
     nhlDataManager: NhlDataManager,
     onBackClick: () -> Unit,
-    onTicketCreated: () -> Unit
+    onTicketCreated: () -> Unit,
+    initialGameId: String? = null // optional preselected game id passed from navigation
 ) {
     val uiState by ticketsViewModel.uiState.collectAsState()
     val authState by authViewModel.uiState.collectAsState()
@@ -53,6 +55,22 @@ fun CreateBingoTicketScreen(
         ticketsViewModel.loadUpcomingGames()
     }
 
+    // If an initialGameId was provided via navigation, select that game once games are loaded.
+    LaunchedEffect(uiState.availableGames, initialGameId) {
+        if (initialGameId != null && selectedGame == null) {
+            val match = uiState.availableGames.firstOrNull { it.id.toString() == initialGameId }
+            if (match != null) {
+                selectedGame = match
+                // load events for the selected game
+                ticketsViewModel.getEventsForGame(match.id) { events ->
+                    // populate available events and clear any previously selected events
+                    availableEvents = events
+                    selectedEvents = List(9) { null }
+                }
+            }
+        }
+    }
+
     // Mirror the CreateChallenge screen layout: TopAppBar with top-right Create action and
     // scrollable content made of selection cards + bingo grid. Keep UI behavior.
     Column(
@@ -62,7 +80,7 @@ fun CreateBingoTicketScreen(
     ) {
         TopAppBar(
             title = {
-                Text(text = "Create Bingo Ticket", fontWeight = FontWeight.Bold)
+                Text(text = stringResource(R.string.create_bingo_ticket), fontWeight = FontWeight.Bold)
             },
             navigationIcon = {
                 IconButton(onClick = onBackClick) {
@@ -84,7 +102,7 @@ fun CreateBingoTicketScreen(
                     },
                     enabled = !uiState.isCreating && userId.isNotBlank() && ticketName.isNotBlank() && selectedEvents.none { it == null }
                 ) {
-                    Text("Create")
+                    Text(stringResource(R.string.create))
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
@@ -104,7 +122,7 @@ fun CreateBingoTicketScreen(
             OutlinedTextField(
                 value = ticketName,
                 onValueChange = { ticketName = it },
-                label = { Text("Ticket Name") },
+                label = { Text(stringResource(R.string.ticket_name)) },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -112,7 +130,7 @@ fun CreateBingoTicketScreen(
             if (uiState.isLoadingGames) {
                 CircularProgressIndicator()
             } else if (uiState.availableGames.isEmpty()) {
-                Text("No upcoming games found.")
+                Text(stringResource(R.string.no_upcoming_games))
             } else {
                 GameDropdown(
                     games = uiState.availableGames,
@@ -129,7 +147,7 @@ fun CreateBingoTicketScreen(
 
             // Bingo grid
             if (selectedGame != null) {
-                Text("Fill your bingo ticket:", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.fill_bingo_ticket), style = MaterialTheme.typography.titleMedium)
                 BingoGrid(
                     selectedEvents = selectedEvents,
                     onSquareClick = { index -> showEventPickerForIndex = index },
@@ -169,7 +187,7 @@ private fun GameDropdown(
         OutlinedTextField(
             value = selectedGame?.let { "${it.awayTeam.abbrev} vs ${it.homeTeam.abbrev}" } ?: "",
             onValueChange = {},
-            label = { Text("Select game") },
+            label = { Text(stringResource(R.string.select_game)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { expanded = true },
@@ -261,7 +279,7 @@ private fun BingoSquare(
         contentAlignment = Alignment.Center
     ) {
         if (eventText.isBlank()) {
-            Text("Tap to add", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.tap_to_add), style = MaterialTheme.typography.bodyMedium)
         } else {
             Box(Modifier.fillMaxSize()) {
                 Text(

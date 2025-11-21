@@ -121,99 +121,122 @@ class NhlDataManagerImpl @Inject constructor(
         val game = getGameById(gameId) ?: return@coroutineScope emptyList()
         val random = Random(gameId)
 
-        val totalEvents = count
+        // --- QUOTAS ---
+        val forwardQuota = (count * 0.45).toInt()
+        val defenseQuota = (count * 0.45).toInt()
+        val goalieTeamQuota = count - forwardQuota - defenseQuota
 
         val categoryQuotas = mutableMapOf(
-            EventCategory.FORWARD to 10,
-            EventCategory.DEFENSE to 7,
-            EventCategory.GOALIE to 2,   // part of the 3
-            EventCategory.TEAM to 1      // part of the 3
+            EventCategory.FORWARD to forwardQuota,
+            EventCategory.DEFENSE to defenseQuota,
+            EventCategory.GOALIE to goalieTeamQuota / 2,
+            EventCategory.TEAM to goalieTeamQuota - (goalieTeamQuota / 2)
         )
 
         val teamQuotas = mutableMapOf(
-            "HOME" to totalEvents / 2,    // 20 of 40
-            "AWAY" to totalEvents / 2
+            game.homeTeam.abbrev to count / 2,
+            game.awayTeam.abbrev to count - (count / 2)
         )
 
+        // --- LOAD ROSTERS ---
         val homeRosterDeferred = async { nhlRepository.getTeamRoster(game.homeTeam.abbrev).getOrNull() }
         val awayRosterDeferred = async { nhlRepository.getTeamRoster(game.awayTeam.abbrev).getOrNull() }
 
         val homeRoster = homeRosterDeferred.await()
         val awayRoster = awayRosterDeferred.await()
 
-        val homeForwards = homeRoster?.forwards ?: emptyList()
-        val homeDefensemen = homeRoster?.defensemen ?: emptyList()
-        val homeGoalies = homeRoster?.goalies ?: emptyList()
+        val homePlayers = mapOf(
+            EventCategory.FORWARD to (homeRoster?.forwards ?: emptyList()),
+            EventCategory.DEFENSE to (homeRoster?.defensemen ?: emptyList()),
+            EventCategory.GOALIE to (homeRoster?.goalies ?: emptyList())
+        )
 
-        val awayForwards = awayRoster?.forwards ?: emptyList()
-        val awayDefensemen = awayRoster?.defensemen ?: emptyList()
-        val awayGoalies = awayRoster?.goalies ?: emptyList()
+        val awayPlayers = mapOf(
+            EventCategory.FORWARD to (awayRoster?.forwards ?: emptyList()),
+            EventCategory.DEFENSE to (awayRoster?.defensemen ?: emptyList()),
+            EventCategory.GOALIE to (awayRoster?.goalies ?: emptyList())
+        )
 
-        val forwards = (homeRoster?.forwards ?: emptyList()) + (awayRoster?.forwards ?: emptyList())
-        val defensemen = (homeRoster?.defensemen ?: emptyList()) + (awayRoster?.defensemen ?: emptyList())
-        val goalies = (homeRoster?.goalies ?: emptyList()) + (awayRoster?.goalies ?: emptyList())
-
-        val forwardSubjects = listOf("goals", "assists", "hits", "sog", "blockedShots", "toi")
-        val defenseSubjects = listOf("goals", "assists", "hits", "sog", "blockedShots", "toi")
-        val goalieSubjects = listOf("saves")
-        val teamSubjects = listOf("goals", "sog", "penaltyMinutes")
+        // --- SUBJECT POOLS ---
+        val subjects = mapOf(
+            EventCategory.FORWARD to listOf("goals", "assists", "hits", "sog", "blockedShots", "toi"),
+            EventCategory.DEFENSE to listOf("goals", "assists", "hits", "sog", "blockedShots", "toi"),
+            EventCategory.GOALIE to listOf("saves"),
+            EventCategory.TEAM to listOf("goals", "sog", "penaltyMinutes")
+        )
 
         val events = mutableListOf<EventCondition>()
+        val generatedEventSignatures = mutableSetOf<String>()
 
-        repeat(count) {
-            val category = EventCategory.values().random(random) // Pick a random category
-
-            var subject: String? = null
-            var threshold: Int? = null
+        fun tryGenerateEvent(team: String, category: EventCategory): EventCondition? {
             val comparison = ComparisonType.GREATER_THAN
-            var playerName: String? = null
-            var playerId: Long? = null
-            var teamAbbrev: String? = null
 
-            when (category) {
-                EventCategory.FORWARD -> {
-                    if (forwards.isEmpty()) return@repeat
-                    val player = forwards.random(random)
-                    subject = forwardSubjects.random(random)
-                    threshold = randomThresholdFor(subject, category, random)
-                    playerName = player.fullName
-                    playerId = player.id
+            return when (category) {
+                EventCategory.FORWARD, EventCategory.DEFENSE, EventCategory.GOALIE -> {
+                    val pool = if (team == game.homeTeam.abbrev) homePlayers[category] else awayPlayers[category]
+                    if (pool.isNullOrEmpty()) return null
+
+                    val player = pool.random(random)
+                    val subject = subjects[category]!!.random(random)
+                    val threshold = randomThresholdFor(subject, category, random)
+                    val signature = "${category}_${team}_${player.id}_$subject"
+
+                    if (generatedEventSignatures.contains(signature)) return null
+
+                    generatedEventSignatures.add(signature)
+                    EventCondition(
+                        id = "${category}_${team}_${player.id}_${events.size}",
+                        category = category,
+                        subject = subject,
+                        comparison = comparison,
+                        threshold = threshold,
+                        playerId = player.id,
+                        playerName = player.fullName,
+                        teamAbbrev = null
+                    )
                 }
-                EventCategory.DEFENSE -> {
-                    if (defensemen.isEmpty()) return@repeat
-                    val player = defensemen.random(random)
-                    subject = defenseSubjects.random(random)
-                    threshold = randomThresholdFor(subject, category, random)
-                    playerName = player.fullName
-                    playerId = player.id
-                }
-                EventCategory.GOALIE -> {
-                    if (goalies.isEmpty()) return@repeat
-                    val player = goalies.random(random)
-                    subject = goalieSubjects.random(random)
-                    threshold = randomThresholdFor(subject, category, random)
-                    playerName = player.fullName
-                    playerId = player.id
-                }
+
                 EventCategory.TEAM, EventCategory.PENALTY -> {
-                    subject = teamSubjects.random(random)
-                    teamAbbrev = if (random.nextBoolean()) game.homeTeam.abbrev else game.awayTeam.abbrev
-                    threshold = randomThresholdFor(subject, category, random)
+                    val subject = subjects[EventCategory.TEAM]!!.random(random)
+                    val threshold = randomThresholdFor(subject, EventCategory.TEAM, random)
+                    val signature = "${category}_${team}_$subject"
+
+                    if (generatedEventSignatures.contains(signature)) return null
+
+                    generatedEventSignatures.add(signature)
+                    EventCondition(
+                        id = "${category}_${team}_${events.size}",
+                        category = category,
+                        subject = subject,
+                        comparison = comparison,
+                        threshold = threshold,
+                        playerId = null,
+                        playerName = null,
+                        teamAbbrev = team
+                    )
                 }
             }
+        }
 
-            if (subject != null && threshold != null) {
-                events += EventCondition(
-                    id = "${category.name}_${it}",
-                    category = category,
-                    subject = subject!!,
-                    comparison = comparison,
-                    threshold = threshold!!,
-                    playerId = playerId,
-                    playerName = playerName,
-                    teamAbbrev = teamAbbrev
-                )
+        // --- MAIN GENERATION LOOP ---
+        var attempts = 0
+        while (events.size < count && attempts < count * 5) { // Safety break for weird conditions
+            val availableCategories = categoryQuotas.filter { it.value > 0 }.keys.toList()
+            val availableTeams = teamQuotas.filter { it.value > 0 }.keys.toList()
+
+            if (availableCategories.isEmpty() || availableTeams.isEmpty()) break
+
+            val category = availableCategories.random(random)
+            val team = availableTeams.random(random)
+
+            val event = tryGenerateEvent(team, category)
+
+            if (event != null) {
+                events += event
+                categoryQuotas[category] = categoryQuotas[category]!! - 1
+                teamQuotas[team] = teamQuotas[team]!! - 1
             }
+            attempts++
         }
 
         return@coroutineScope events
@@ -554,7 +577,7 @@ class NhlDataManagerImpl @Inject constructor(
                 else -> (1..3).random(random)
             }
 
-            else -> (1..3).random(random)
+            else -> (88..99).random(random)
         }
     }
 }

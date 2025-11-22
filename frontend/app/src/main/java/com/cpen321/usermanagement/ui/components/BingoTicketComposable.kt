@@ -149,14 +149,14 @@ fun BingoGrid(
                                 teamAbbrev = label.value,
                                 size = (cellSize.value / 2).dp,
                                 showAbbrev = true,
-                                abbrevFontSize = 9.sp
+                                abbrevFontSize = 13.sp
                             )
                         } else {
                             Text(
                                 text = label.value,
-                                style = MaterialTheme.typography.bodySmall,
+                                fontSize = 13.sp,
                                 textAlign = TextAlign.Center, // Center the text within the cell
-                                modifier = Modifier.padding(4.dp)
+                                modifier = Modifier.padding(3.dp)
                             )
                         }
                     }

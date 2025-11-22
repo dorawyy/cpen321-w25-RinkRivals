@@ -1,4 +1,3 @@
-
 package com.cpen321.usermanagement.data.local.preferences
 
 import android.util.Log
@@ -129,8 +128,8 @@ class NhlDataManagerImpl @Inject constructor(
         val categoryQuotas = mutableMapOf(
             EventCategory.FORWARD to forwardQuota,
             EventCategory.DEFENSE to defenseQuota,
-            EventCategory.GOALIE to goalieTeamQuota / 2,
-            EventCategory.TEAM to goalieTeamQuota - (goalieTeamQuota / 2)
+            EventCategory.TEAM to goalieTeamQuota / 2,
+            EventCategory.GOALIE to goalieTeamQuota - (goalieTeamQuota / 2)
         )
 
         val teamQuotas = mutableMapOf(
@@ -180,7 +179,7 @@ class NhlDataManagerImpl @Inject constructor(
                     val subject = subjects[category]!!.random(random)
                     val threshold = randomThresholdFor(subject, category, random)
                     val signature = "${category}_${team}_${player.id}_$subject"
-
+                    // Prevent duplicate events
                     if (generatedEventSignatures.contains(signature)) return null
 
                     generatedEventSignatures.add(signature)
@@ -192,7 +191,7 @@ class NhlDataManagerImpl @Inject constructor(
                         threshold = threshold,
                         playerId = player.id,
                         playerName = player.fullName,
-                        teamAbbrev = null
+                        teamAbbrev = team
                     )
                 }
 
@@ -276,31 +275,8 @@ class NhlDataManagerImpl @Inject constructor(
      */
     override suspend fun isFulfilled(event: EventCondition, boxscore: Boxscore): Boolean {
         // Get the stat value based on the event category and subject
-        val value = when (event.category) {
-            EventCategory.FORWARD,
-            EventCategory.DEFENSE,
-            EventCategory.GOALIE -> {
-                // Player-level stat
-                getValueForField(
-                    boxscore,
-                    event.copy(
-                        subject = event.subject,
-                        playerName = event.playerName,
-                        playerId = event.playerId,
-                        teamAbbrev = event.teamAbbrev
-                    )
-                )
-            }
+        val value = getValueForField(boxscore, event)
 
-            EventCategory.TEAM,
-            EventCategory.PENALTY -> {
-                // Team-level stat
-                getValueForField(
-                    boxscore,
-                    event.copy(subject = event.subject)
-                )
-            }
-        }
 
         // Log debug info to help verify what's happening
         Log.d(
@@ -330,27 +306,32 @@ class NhlDataManagerImpl @Inject constructor(
     override fun formatEventLabel(event: EventCondition): String {
         val subject = when {
             !event.playerName.isNullOrEmpty() -> event.playerName
-            !event.teamAbbrev.isNullOrEmpty() -> event.teamAbbrev
+            !event.teamAbbrev.isNullOrEmpty() && event.category in listOf(EventCategory.TEAM, EventCategory.PENALTY) -> event.teamAbbrev
             else -> "Player"
         }
 
-        val statName = when (event.subject ?: "") {
-            "player.goals" -> "scores"
-            "player.assists" -> "assists"
-            "player.hits" -> "makes hits"
-            "player.sog" -> "takes shots"
-            "player.blockedShots" -> "blocks shots"
-            "goalie.saves" -> "makes saves"
-            "team.goals" -> "scores goals"
-            "team.penalties" -> "takes penalties"
-            "team.shots" -> "takes shots"
+        val statName = when (event.subject) {
+            "goals" -> if (event.category == EventCategory.TEAM) {
+                listOf("scores", "total").random() + " goals"
+            } else {
+                listOf("scores", "goals", "scores goals").random()
+            }
+            "assists" -> listOf("assists on a goal", "gets assists", "assists").random()
+            "hits" -> listOf("delivers hits", "body checks", "hits").random()
+            "sog" -> if (event.category == EventCategory.TEAM) {
+                "total shots"
+            } else {
+                listOf("shots on goal", "shots").random()
+            }
+            "blockedShots" -> listOf("blocks shots", "shots blocked").random()
+            "saves" -> listOf("makes saves", "saves", "shots saved").random()
+            "penaltyMinutes" -> listOf("takes penalty minutes", "total penalty minutes", "penalty minutes").random()
             else -> event.subject ?: "unknown stat"
         }
 
         val comparison = when (event.comparison) {
             ComparisonType.GREATER_THAN -> "${event.threshold}+"
             ComparisonType.LESS_THAN -> "< ${event.threshold}"
-            else -> event.threshold.toString()
         }
 
         return "$subject $statName ($comparison)"
@@ -365,7 +346,7 @@ class NhlDataManagerImpl @Inject constructor(
         val subject = eventCondition.subject.removePrefix("player.").removePrefix("team.").removePrefix("goalie.")
 
         // TEAM-level queries (sums, or team fields)
-        if (eventCondition.teamAbbrev != null || subject.startsWith("team") || eventCondition.category == EventCategory.TEAM || eventCondition.category == EventCategory.PENALTY) {
+        if (eventCondition.category == EventCategory.TEAM || eventCondition.category == EventCategory.PENALTY) {
             val teamAbbrev = eventCondition.teamAbbrev ?: return null
             val isHome = boxscore.homeTeam.abbrev == teamAbbrev
             val teamInfo = if (isHome) boxscore.homeTeam else boxscore.awayTeam

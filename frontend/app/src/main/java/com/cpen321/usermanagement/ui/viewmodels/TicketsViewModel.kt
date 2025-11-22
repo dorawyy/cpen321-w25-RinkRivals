@@ -145,6 +145,17 @@ class TicketsViewModel @Inject constructor(
         navigationStateManager.navigateToTicketDetail(ticketId)
     }
 
+    fun toggleSection(gameState: String) {
+        val currentExpanded = _uiState.value.expandedSections
+        val newExpanded = if (currentExpanded.contains(gameState)) {
+            currentExpanded - gameState
+        } else {
+            currentExpanded + gameState
+        }
+        _uiState.value = _uiState.value.copy(expandedSections = newExpanded)
+    }
+
+
     fun updateTicketFromBoxscore(ticketId: String) {
         viewModelScope.launch {
             Log.d("TicketsViewModel", "Starting update for ticketId: $ticketId")

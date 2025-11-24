@@ -1,7 +1,14 @@
 package com.cpen321.usermanagement.fakes
 
+import com.cpen321.usermanagement.data.local.preferences.ComparisonType
+import com.cpen321.usermanagement.data.local.preferences.EventCategory
+import com.cpen321.usermanagement.data.local.preferences.EventCondition
 import com.cpen321.usermanagement.data.remote.dto.BingoTicket
 import com.cpen321.usermanagement.data.remote.dto.Game
+import com.cpen321.usermanagement.data.remote.dto.Name
+import com.cpen321.usermanagement.data.remote.dto.PeriodDescriptor
+import com.cpen321.usermanagement.data.remote.dto.Team
+import com.cpen321.usermanagement.data.remote.dto.Venue
 import com.cpen321.usermanagement.data.repository.TicketsRepository
 import kotlinx.coroutines.delay
 
@@ -14,7 +21,7 @@ class FakeTicketsRepository : TicketsRepository {
             id = 1L,
             season = 2025,
             gameType = 2,
-            venue = com.cpen321.usermanagement.data.remote.dto.Venue("Rogers Arena"),
+            venue = Venue("Rogers Arena"),
             neutralSite = false,
             startTimeUTC = "2025-11-10T02:00:00Z",
             easternUTCOffset = "-05:00",
@@ -23,32 +30,44 @@ class FakeTicketsRepository : TicketsRepository {
             gameState = "Scheduled",
             gameScheduleState = "OK",
             tvBroadcasts = emptyList(),
-            awayTeam = com.cpen321.usermanagement.data.remote.dto.Team(
+            awayTeam = Team(
                 id = 10,
-                commonName = com.cpen321.usermanagement.data.remote.dto.Name("Maple Leafs"),
-                placeName = com.cpen321.usermanagement.data.remote.dto.Name("Toronto"),
-                placeNameWithPreposition = com.cpen321.usermanagement.data.remote.dto.Name("Toronto"),
+                commonName = Name("Maple Leafs"),
+                placeName = Name("Toronto"),
+                placeNameWithPreposition = Name("Toronto"),
                 abbrev = "TOR",
                 logo = "",
                 darkLogo = "",
                 radioLink = ""
             ),
-            homeTeam = com.cpen321.usermanagement.data.remote.dto.Team(
+            homeTeam = Team(
                 id = 22,
-                commonName = com.cpen321.usermanagement.data.remote.dto.Name("Canucks"),
-                placeName = com.cpen321.usermanagement.data.remote.dto.Name("Vancouver"),
-                placeNameWithPreposition = com.cpen321.usermanagement.data.remote.dto.Name("Vancouver"),
+                commonName = Name("Canucks"),
+                placeName = Name("Vancouver"),
+                placeNameWithPreposition = Name("Vancouver"),
                 abbrev = "VAN",
                 logo = "",
                 darkLogo = "",
                 radioLink = ""
             ),
-            periodDescriptor = com.cpen321.usermanagement.data.remote.dto.PeriodDescriptor(3, "REG", 3),
+            periodDescriptor = PeriodDescriptor(3, "REG", 3),
             ticketsLink = null,
             ticketsLinkFr = null,
             gameCenterLink = null
         )
     )
+
+    private val fakeEvents = List(9) { i ->
+        EventCondition(
+            id = "E$i",
+            category = EventCategory.FORWARD,
+            subject = "goals",
+            comparison = ComparisonType.GREATER_THAN,
+            threshold = i % 3,
+            playerName = "Player ${i + 1}",
+            teamAbbrev = if (i % 2 == 0) "VAN" else "TOR"
+        )
+    }
 
     private val fakeTickets = mutableListOf(
         BingoTicket(
@@ -56,7 +75,7 @@ class FakeTicketsRepository : TicketsRepository {
             userId = "currentUserId",
             name = "My First Ticket",
             game = fakeGames.first(),
-            events = List(9) { "Event $it" },
+            events = fakeEvents,
             crossedOff = List(9) { false }
         )
     )
@@ -76,7 +95,7 @@ class FakeTicketsRepository : TicketsRepository {
         userId: String,
         name: String,
         game: Game,
-        events: List<String>
+        events: List<EventCondition>
     ): Result<BingoTicket> {
         delay(100)
         val newTicket = BingoTicket(

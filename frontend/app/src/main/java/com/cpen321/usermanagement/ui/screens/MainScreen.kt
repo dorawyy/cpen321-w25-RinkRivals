@@ -52,9 +52,9 @@ fun MainScreen(
     // Side effects
     LaunchedEffect(Unit) {
         mainViewModel.clearSuccessMessage()
+        mainViewModel.loadGameSchedule()
         if (uiState.user == null) {
             mainViewModel.loadProfile()
-            mainViewModel.loadGameSchedule()
         }
     }
 

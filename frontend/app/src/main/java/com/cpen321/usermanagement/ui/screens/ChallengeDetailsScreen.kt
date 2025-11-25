@@ -11,18 +11,17 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.cpen321.usermanagement.R
 import com.cpen321.usermanagement.data.local.preferences.NhlDataManager
 import com.cpen321.usermanagement.data.local.preferences.SocketEventListener
@@ -30,15 +29,11 @@ import com.cpen321.usermanagement.data.local.preferences.SocketManager
 import com.cpen321.usermanagement.data.remote.dto.BingoTicket
 import com.cpen321.usermanagement.data.remote.dto.Challenge
 import com.cpen321.usermanagement.data.remote.dto.ChallengeStatus
-import com.cpen321.usermanagement.data.remote.dto.Game
 import com.cpen321.usermanagement.data.remote.dto.User
 import com.cpen321.usermanagement.ui.components.BingoTicketCard
-import com.cpen321.usermanagement.ui.components.TeamMatchup
 import com.cpen321.usermanagement.ui.components.GameCard
 import com.cpen321.usermanagement.ui.viewmodels.ChallengesViewModel
 import com.cpen321.usermanagement.ui.viewmodels.Friend
-import java.text.SimpleDateFormat
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +75,7 @@ fun ChallengeDetailsScreen(
     LaunchedEffect(uiState.selectedChallenge) {
         if (uiState.selectedChallenge != null) {
             // Load tickets for all members who have ticket IDs
-            uiState.selectedChallenge?.ticketIds.orEmpty().forEach { (userId, ticketId) ->
+            uiState.selectedChallenge?.ticketIds.orEmpty().forEach { (_, ticketId) ->
                 challengesViewModel.loadTicketById(ticketId)
             }
         }
@@ -99,8 +94,7 @@ fun ChallengeDetailsScreen(
         val isOwner = challenge.ownerId == userId
         val isInvitee = challenge.invitedUserIds.contains(userId)
         val canLeave = !isOwner && challenge.memberIds.contains(userId)
-
-            ChallengeDetailsContent(
+        ChallengeDetailsContent(
             challenge = challenge,
             user = uiState.user,
             isOwner = isOwner,
@@ -116,8 +110,8 @@ fun ChallengeDetailsScreen(
                 onBackClick()
             },
             allFriends = allFriends,
-            availableTickets = availableTicketsForJoining.orEmpty().filter { 
-                it.game.id.toString() == challenge.gameId 
+            availableTickets = availableTicketsForJoining.orEmpty().filter {
+                it.game.id.toString() == challenge.gameId
             },
             selectedTicket = selectedTicketForJoining,
             onTicketSelected = { ticket -> selectedTicketForJoining = ticket },
@@ -351,11 +345,11 @@ private fun ChallengeTitleSection(
             Surface(
                 shape = MaterialTheme.shapes.small,
                 color = when (status) {
-                    ChallengeStatus.PENDING -> MaterialTheme.colorScheme.secondaryContainer
-                    ChallengeStatus.ACTIVE -> MaterialTheme.colorScheme.tertiaryContainer
+                    ChallengeStatus.PENDING -> MaterialTheme.colorScheme.primaryContainer
+                    ChallengeStatus.ACTIVE -> Color(0xFFC8E6C9) // Light Green
                     ChallengeStatus.LIVE -> MaterialTheme.colorScheme.errorContainer
-                    ChallengeStatus.FINISHED -> MaterialTheme.colorScheme.surfaceVariant
-                    ChallengeStatus.CANCELLED -> MaterialTheme.colorScheme.surfaceVariant
+                    ChallengeStatus.FINISHED -> MaterialTheme.colorScheme.secondaryContainer
+                    ChallengeStatus.CANCELLED -> MaterialTheme.colorScheme.secondaryContainer
                 },
                 modifier = Modifier.wrapContentWidth()
             ) {
@@ -365,11 +359,11 @@ private fun ChallengeTitleSection(
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = when (status) {
-                        ChallengeStatus.PENDING -> MaterialTheme.colorScheme.onSecondaryContainer
-                        ChallengeStatus.ACTIVE -> MaterialTheme.colorScheme.onTertiaryContainer
+                        ChallengeStatus.PENDING -> MaterialTheme.colorScheme.onPrimaryContainer
+                        ChallengeStatus.ACTIVE -> Color(0xFF1B5E20) // Dark Green
                         ChallengeStatus.LIVE -> MaterialTheme.colorScheme.onErrorContainer
-                        ChallengeStatus.FINISHED -> MaterialTheme.colorScheme.onSurfaceVariant
-                        ChallengeStatus.CANCELLED -> MaterialTheme.colorScheme.onSurfaceVariant
+                        ChallengeStatus.FINISHED -> MaterialTheme.colorScheme.onSecondaryContainer
+                        ChallengeStatus.CANCELLED -> MaterialTheme.colorScheme.onSecondaryContainer
                     }
                 )
             }
@@ -482,7 +476,7 @@ private fun MembersSection(
                 )
             }
 
-            Divider()
+            HorizontalDivider()
 
             if (challenge.memberIds.isNotEmpty() && allFriends != null) {
                 Column(
@@ -574,7 +568,7 @@ private fun InvitedUsersSection(
                 }
             }
 
-            Divider()
+            HorizontalDivider()
 
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)

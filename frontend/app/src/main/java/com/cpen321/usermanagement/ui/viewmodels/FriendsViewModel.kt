@@ -116,8 +116,4 @@ class FriendsViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(statusMessage = null)
         }
     }
-
-    fun clearMessage() {
-        _uiState.value = _uiState.value.copy(statusMessage = null)
-    }
 }

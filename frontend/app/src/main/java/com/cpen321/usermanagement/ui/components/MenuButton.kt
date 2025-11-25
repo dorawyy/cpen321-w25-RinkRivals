@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.cpen321.usermanagement.ui.components.Icon
 import com.cpen321.usermanagement.ui.theme.LocalSpacing
 
 @Composable

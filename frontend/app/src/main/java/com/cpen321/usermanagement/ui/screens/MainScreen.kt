@@ -1,6 +1,5 @@
 package com.cpen321.usermanagement.ui.screens
 
-import Icon
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -11,7 +10,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -29,7 +27,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cpen321.usermanagement.R
@@ -38,22 +35,15 @@ import com.cpen321.usermanagement.data.local.preferences.NhlDataManager
 import com.cpen321.usermanagement.ui.components.BingoTicketCard
 import com.cpen321.usermanagement.ui.components.MessageSnackbar
 import com.cpen321.usermanagement.ui.components.MessageSnackbarState
-import com.cpen321.usermanagement.ui.components.TeamMatchup
 import com.cpen321.usermanagement.ui.viewmodels.MainUiState
 import com.cpen321.usermanagement.ui.viewmodels.MainViewModel
-import com.cpen321.usermanagement.ui.theme.LocalSpacing
-import java.text.SimpleDateFormat
-import java.util.*
 
 
 
 @Composable
 fun MainScreen(
     mainViewModel: MainViewModel,
-    onProfileClick: () -> Unit,
     onTicketClick: () -> Unit,
-    onFriendsClick: () -> Unit,
-    onChallengeClick: () -> Unit
 ) {
     val uiState by mainViewModel.uiState.collectAsState()
     val nhlDataState by mainViewModel.nhlDataState.collectAsState()
@@ -71,10 +61,7 @@ fun MainScreen(
     MainContent(
         uiState = uiState,
         snackBarHostState = snackBarHostState,
-        onProfileClick = onProfileClick,
         onTicketClick = onTicketClick,
-        onFriendsClick = onFriendsClick,
-        onChallengeClick = onChallengeClick,
         onSuccessMessageShown = mainViewModel::clearSuccessMessage,
         upcomingGames = nhlDataState.gameSchedule?.flatMap { it.games }?.take(15) ?: emptyList(),
         nhlDataManager = mainViewModel.nhlDataManager
@@ -85,10 +72,7 @@ fun MainScreen(
 private fun MainContent(
     uiState: MainUiState,
     snackBarHostState: SnackbarHostState,
-    onProfileClick: () -> Unit,
     onTicketClick: () -> Unit,
-    onFriendsClick: () -> Unit,
-    onChallengeClick: () -> Unit,
     onSuccessMessageShown: () -> Unit,
     upcomingGames: List<Game>,
     nhlDataManager: NhlDataManager,
@@ -190,7 +174,7 @@ private fun MainBody(
         if (!uiState.userTickets.isNullOrEmpty()) {
             val liveTickets = uiState.userTickets
                 .filter {
-                    val state = it.game.gameState ?: ""
+                    val state = it.game.gameState ?: "OFF"
                     val u = state.uppercase()
                     u == "LIVE" || u == "CRIT" || u == "FUT"
                 }

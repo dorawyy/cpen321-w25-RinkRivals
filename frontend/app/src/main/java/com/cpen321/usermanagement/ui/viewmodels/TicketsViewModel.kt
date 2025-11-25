@@ -124,6 +124,7 @@ class TicketsViewModel @Inject constructor(
                 val events = nhlDataManager.getEventsForGame(gameId)
                 onEventsLoaded(events)
             } catch (e: Exception) {
+                Log.e("TicketsViewModel", "Failed to get events for game $gameId", e)
                 onEventsLoaded(emptyList())
             }
         }

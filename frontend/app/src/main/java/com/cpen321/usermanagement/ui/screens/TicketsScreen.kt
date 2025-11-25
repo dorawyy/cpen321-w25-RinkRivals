@@ -1,17 +1,12 @@
 package com.cpen321.usermanagement.ui.screens
 
-import Icon
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.forEach
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.*
@@ -31,15 +26,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cpen321.usermanagement.R
-import com.cpen321.usermanagement.data.local.preferences.EventCondition
-import com.cpen321.usermanagement.data.local.preferences.NhlDataManager
 import com.cpen321.usermanagement.data.remote.dto.BingoTicket
 import com.cpen321.usermanagement.data.remote.dto.TicketsUiState
 import com.cpen321.usermanagement.ui.components.BingoTicketCard
-import com.cpen321.usermanagement.ui.components.TeamLogo
-import com.cpen321.usermanagement.ui.viewmodels.AuthViewModel
 import com.cpen321.usermanagement.ui.viewmodels.AuthViewModelContract
-import com.cpen321.usermanagement.ui.viewmodels.ChallengesViewModel
 import com.cpen321.usermanagement.ui.viewmodels.TicketsViewModel
 import kotlinx.coroutines.launch
 
@@ -97,7 +87,7 @@ private fun TicketsContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TicketsTopBar(onBackClick = { callbacks.onBackClick() })
+            TicketsTopBar()
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
@@ -115,7 +105,6 @@ private fun TicketsContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TicketsTopBar(
-    onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     TopAppBar(

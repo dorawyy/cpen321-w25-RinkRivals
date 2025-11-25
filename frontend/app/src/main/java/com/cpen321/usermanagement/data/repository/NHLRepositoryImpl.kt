@@ -1,20 +1,17 @@
 package com.cpen321.usermanagement.data.repository
 
-import android.content.Context
 import android.util.Log
 import com.cpen321.usermanagement.data.remote.api.NHLInterface
 import com.cpen321.usermanagement.data.remote.dto.Boxscore
 import com.cpen321.usermanagement.data.remote.dto.GameDay
 import com.cpen321.usermanagement.data.remote.dto.TeamRosterResponse
 import com.cpen321.usermanagement.utils.JsonUtils.parseErrorMessage
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 
 @Singleton
 class NHLRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val nhlInterface: NHLInterface
 ): NHLRepository {
 

@@ -76,7 +76,7 @@ fun MainScreen(
         onFriendsClick = onFriendsClick,
         onChallengeClick = onChallengeClick,
         onSuccessMessageShown = mainViewModel::clearSuccessMessage,
-        upcomingGames = nhlDataState.gameSchedule?.flatMap { it.games }?.take(5) ?: emptyList(),
+        upcomingGames = nhlDataState.gameSchedule?.flatMap { it.games }?.take(15) ?: emptyList(),
         nhlDataManager = mainViewModel.nhlDataManager
     )
 }
@@ -389,63 +389,6 @@ private fun CreateFirstTicketCard(
                 Text(stringResource(R.string.create_ticket))
             }
         }
-    }
-}
-
-@Composable
-private fun GameStateBadge(
-    gameState: String,
-    modifier: Modifier = Modifier
-) {
-    val (backgroundColor, textColor, displayText) = when (gameState.uppercase()) {
-        "LIVE", "CRIT" -> Triple(
-            MaterialTheme.colorScheme.error,
-            MaterialTheme.colorScheme.onError,
-            "🔴 LIVE"
-        )
-        "FUT" -> Triple(
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer,
-            "Upcoming"
-        )
-        "FINAL", "OFF" -> Triple(
-            MaterialTheme.colorScheme.surfaceVariant,
-            MaterialTheme.colorScheme.onSurfaceVariant,
-            "Final"
-        )
-        else -> Triple(
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.colorScheme.onSecondaryContainer,
-            gameState
-        )
-    }
-
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
-        color = backgroundColor
-    ) {
-        Text(
-            text = displayText,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = textColor
-        )
-    }
-}
-
-// Helper function to format game time
-private fun formatGameTime(startTimeUTC: String): String {
-    return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
-        inputFormat.timeZone = TimeZone.getTimeZone("UTC")
-        val date = inputFormat.parse(startTimeUTC)
-        
-        val outputFormat = SimpleDateFormat("MMM dd, h:mm a", Locale.getDefault())
-        date?.let { outputFormat.format(it) } ?: startTimeUTC
-    } catch (e: Exception) {
-        startTimeUTC
     }
 }
 

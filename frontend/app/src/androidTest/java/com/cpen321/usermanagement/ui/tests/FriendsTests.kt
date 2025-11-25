@@ -38,18 +38,18 @@ class FriendsScreenTest {
 
         // Type a valid code and send
         composeTestRule.onNodeWithText("Enter friend code").performTextInput("VALIDCODE")
-        composeTestRule.onNodeWithText("Send Request").performClick()
+        composeTestRule.onNodeWithText("Send").performClick()
         composeTestRule.onNodeWithText("Friend request sent!").assertIsDisplayed()
 
         // Type an invalid code and send
         composeTestRule.onNodeWithText("Enter friend code").performTextInput("INVALID")
-        composeTestRule.onNodeWithText("Send Request").performClick()
-        composeTestRule.onNodeWithText("Failed to send request: Invalid friend code").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Send").performClick()
+        composeTestRule.onNodeWithText("Enter a valid code").assertIsDisplayed()
 
         // Sending an empty code
         composeTestRule.onNodeWithText("Enter friend code").performTextClearance()
-        composeTestRule.onNodeWithText("Send Request").performClick()
-        composeTestRule.onNodeWithText("Friend code cannot be empty").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Send").performClick()
+        composeTestRule.onNodeWithText("enter a valid code").assertIsDisplayed()
     }
 
     @Test

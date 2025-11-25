@@ -10,7 +10,7 @@ interface NhlDataManager {
     fun getUpcomingGames(): List<Game>
     fun getGamesForChallenges(): List<Game>
     fun getGamesForTickets(): List<Game>
-    suspend fun getEventsForGame(gameId: Long, count: Int = 30): List<EventCondition>
+    suspend fun getEventsForGame(gameId: Long, count: Int = 40): List<EventCondition>
     fun getGameById(gameId: Long): Game?
     fun clearError()
     suspend fun refreshSchedule(): Result<List<GameDay>>

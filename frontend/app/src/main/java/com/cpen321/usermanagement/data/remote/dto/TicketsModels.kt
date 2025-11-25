@@ -30,5 +30,6 @@ data class TicketsUiState(
     val successMessage: String? = null,
 
     val isLoadingGames: Boolean = false,
-    val availableGames: List<Game> = emptyList()
+    val availableGames: List<Game> = emptyList(),
+    val expandedSections: Set<String> = setOf("LIVE") // Added this line
 )

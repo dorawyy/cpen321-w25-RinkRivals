@@ -1,17 +1,12 @@
 package com.cpen321.usermanagement.ui.screens
 
-import Icon
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.forEach
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.*
@@ -31,15 +26,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cpen321.usermanagement.R
-import com.cpen321.usermanagement.data.local.preferences.EventCondition
-import com.cpen321.usermanagement.data.local.preferences.NhlDataManager
 import com.cpen321.usermanagement.data.remote.dto.BingoTicket
 import com.cpen321.usermanagement.data.remote.dto.TicketsUiState
 import com.cpen321.usermanagement.ui.components.BingoTicketCard
-import com.cpen321.usermanagement.ui.components.TeamLogo
-import com.cpen321.usermanagement.ui.viewmodels.AuthViewModel
 import com.cpen321.usermanagement.ui.viewmodels.AuthViewModelContract
-import com.cpen321.usermanagement.ui.viewmodels.ChallengesViewModel
 import com.cpen321.usermanagement.ui.viewmodels.TicketsViewModel
 import kotlinx.coroutines.launch
 
@@ -97,7 +87,7 @@ private fun TicketsContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TicketsTopBar(onBackClick = { callbacks.onBackClick() })
+            TicketsTopBar()
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
@@ -116,7 +106,6 @@ private fun TicketsContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TicketsTopBar(
-    onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
@@ -150,13 +139,17 @@ private fun TicketsBody(
     val nhlState by ticketsViewModel.nhlDataManager.uiState.collectAsState()
     
     // For each ticket, find its full game data from the NhlDataManager.
-    // This creates a new list of tickets where the `game` object is guaranteed to be non-null.
-    val enrichedTickets = remember(allTickets, nhlState.gameSchedule) {
-        allTickets.mapNotNull { ticket ->
+    // If the game is not found (finished games), keep the original ticket
+    val enrichedTickets = remember(allTickets, ticketsViewModel.nhlDataManager.getGamesForTickets()) {
+        allTickets.map { ticket ->
             // Look up the game using the gameId stored on the ticket
-            ticketsViewModel.nhlDataManager.getGameById(ticket.game.id)?.let { game ->
+            val fullGame = ticketsViewModel.nhlDataManager.getGameById(ticket.game.id)
+            if (fullGame != null) {
                 // Create a new BingoTicket instance with the full game data
-                ticket.copy(game = game)
+                ticket.copy(game = fullGame)
+            } else {
+                // Game not found (likely finished), keep original ticket
+                ticket
             }
         }
     }
@@ -204,7 +197,6 @@ private fun TicketsBody(
 }
 
 
-// Replace the OLD TicketsList with this one
 @Composable
 fun TicketsList(
     modifier: Modifier = Modifier,
@@ -217,9 +209,12 @@ fun TicketsList(
     println("All tickets: $allTickets")
     println("Ticket game states: ${allTickets.map { it.game.gameState }}")
 
-    val gameStateOrder = listOf("CRIT", "LIVE", "PRE", "FUT", "FINAL")
+    val gameStateOrder = listOf("CRIT", "LIVE", "PRE", "FUT", "FINAL", "OFF")
 
-    val groupedTickets = allTickets.groupBy { it.game.gameState }
+    // Group tickets by gameState, treating null/empty gameState as "OFF"
+    val groupedTickets = allTickets.groupBy { 
+        it.game.gameState?.takeIf { state -> state.isNotBlank() } ?: "OFF"
+    }
 
     LazyColumn(
         modifier = modifier
@@ -266,6 +261,7 @@ private fun CollapsibleTicketsSection(
         "PRE" -> stringResource(R.string.pre_game)
         "FUT" -> stringResource(R.string.upcoming)
         "FINAL" -> stringResource(R.string.game_final)
+        "OFF" -> stringResource(R.string.game_final)
         else -> gameState
     }
 
@@ -276,6 +272,7 @@ private fun CollapsibleTicketsSection(
         "PRE" -> Color(0xFFC8E6C9) // Light Green
         "FUT" -> MaterialTheme.colorScheme.primaryContainer // purple
         "FINAL" -> MaterialTheme.colorScheme.secondaryContainer
+        "OFF" -> MaterialTheme.colorScheme.secondaryContainer
         else -> MaterialTheme.colorScheme.surface
     }
 
@@ -285,6 +282,7 @@ private fun CollapsibleTicketsSection(
         "PRE" -> Color(0xFF1B5E20) // Dark Green
         "FUT" -> MaterialTheme.colorScheme.onPrimaryContainer
         "FINAL" -> MaterialTheme.colorScheme.onSecondaryContainer
+        "OFF" -> MaterialTheme.colorScheme.onSecondaryContainer
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 

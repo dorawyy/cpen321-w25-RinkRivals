@@ -11,7 +11,7 @@ import axios from 'axios';
 // Mock axios
 jest.mock('axios');
 
-import { NHLService } from '../../../src/services/nhl.service';
+import { NHLService } from '../../src/services/nhl.service';
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 

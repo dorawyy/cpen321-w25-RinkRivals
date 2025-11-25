@@ -70,9 +70,6 @@ class ChallengesViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ChallengesUiState())
     val uiState = _uiState.asStateFlow()
 
-    // Expose NHL data for challenges
-    val nhlDataState = nhlDataManager.uiState
-
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
@@ -348,13 +345,6 @@ class ChallengesViewModel @Inject constructor(
     }
 
     /**
-     * Get upcoming NHL games for challenge creation
-     */
-    fun getUpcomingGamesForChallenges(): List<Game> {
-        return nhlDataManager.getGamesForChallenges()
-    }
-
-    /**
      * Load upcoming NHL games for challenge creation
      */
     fun loadUpcomingGames() {
@@ -380,13 +370,6 @@ class ChallengesViewModel @Inject constructor(
                 )
             }
         }
-    }
-
-    /**
-     * Get a specific game by ID
-     */
-    fun getGameById(gameId: Long): Game? {
-        return nhlDataManager.getGameById(gameId)
     }
 
 

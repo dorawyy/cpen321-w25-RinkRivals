@@ -7,21 +7,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,7 +31,6 @@ import com.cpen321.usermanagement.data.remote.dto.Game
 import com.cpen321.usermanagement.ui.components.TeamMatchup
 import com.cpen321.usermanagement.ui.viewmodels.ChallengesViewModel
 import com.cpen321.usermanagement.ui.viewmodels.Friend
-import com.cpen321.usermanagement.ui.viewmodels.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -171,7 +166,7 @@ fun CreateChallengeScreen(
             // Game Selection Card
             SelectionCard(
                 title = "Select Game",
-                icon_painter = androidx.compose.ui.res.painterResource(id = R.drawable.hockey_outlined_icon),
+                iconPainter = androidx.compose.ui.res.painterResource(id = R.drawable.hockey_outlined_icon),
                 selectedText = selectedGame?.let { "${it.awayTeam.abbrev} vs ${it.homeTeam.abbrev}" } ?: "Choose a game",
                 onClick = { showGamePicker = true },
                 isSelected = selectedGame != null
@@ -180,7 +175,7 @@ fun CreateChallengeScreen(
             // Ticket Selection Card  
             SelectionCard(
                 title = "Select Bingo Ticket",
-                icon_painter = androidx.compose.ui.res.painterResource(id = R.drawable.bingo_ticket),
+                iconPainter = androidx.compose.ui.res.painterResource(id = R.drawable.bingo_ticket),
                 selectedText = selectedTicket?.name ?: if (selectedGame != null) "Choose your ticket" else "Select a game first",
                 onClick = { if (selectedGame != null) showTicketPicker = true },
                 isSelected = selectedTicket != null,
@@ -265,7 +260,7 @@ fun CreateChallengeScreen(
 @Composable
 private fun SelectionCard(
     title: String,
-    icon_painter: Painter,
+    iconPainter: Painter,
     selectedText: String,
     onClick: () -> Unit,
     isSelected: Boolean,
@@ -290,7 +285,7 @@ private fun SelectionCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Icon(
-                painter = icon_painter,
+                painter = iconPainter,
                 contentDescription = stringResource(R.string.challenges),
                 modifier = Modifier.size(24.dp)
             )
@@ -309,7 +304,7 @@ private fun SelectionCard(
                 )
             }
             Icon(
-                imageVector = if (isSelected) Icons.Default.Check else Icons.Default.ArrowForward,
+                imageVector = if (isSelected) Icons.Default.Check else Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null,
                 tint = if (isSelected) 
                     MaterialTheme.colorScheme.primary 
@@ -434,7 +429,7 @@ private fun FriendsSelectionCard(
                 )
             } else {
                 Icon(
-                    imageVector = Icons.Default.ArrowForward,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -716,13 +711,14 @@ private fun FriendItem(
     }
 }
 
-public fun formatDateTime(dateTimeString: String): String {
+fun formatDateTime(dateTimeString: String): String {
     return try {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
         val outputFormat = SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault())
         val date = inputFormat.parse(dateTimeString)
         outputFormat.format(date ?: Date())
     } catch (e: Exception) {
+        Log.e("formatDateTime", "Error formatting date/time: ${e.message}")
         dateTimeString // Return original string if parsing fails
     }
 }

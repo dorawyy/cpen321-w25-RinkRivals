@@ -45,10 +45,7 @@ class MainViewModel @Inject constructor(
 
     // Expose NHL data from manager
     val nhlDataState = nhlDataManager.uiState
-    
-    // Expose socket connection state
-    val socketConnected = socketManager.isConnected
-    val socketAuthenticated = socketManager.isAuthenticated
+
 
     companion object {
         private const val TAG = "MainViewModel"
@@ -77,14 +74,6 @@ class MainViewModel @Inject constructor(
         socketManager.authenticate(userId, userEmail)
     }
     
-    /**
-     * Disconnect from WebSocket server
-     */
-    fun disconnectSocket() {
-        Log.d(TAG, "Disconnecting from WebSocket server")
-        socketManager.disconnect()
-    }
-    
     override fun onCleared() {
         super.onCleared()
         // Clean up socket connection when ViewModel is destroyed
@@ -104,10 +93,6 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             nhlDataManager.loadSchedule()
         }
-    }
-
-    fun clearScheduleError() {
-        nhlDataManager.clearError()
     }
 
     fun loadProfile() {

@@ -1,12 +1,11 @@
 package com.cpen321.usermanagement.ui.screens
 
-// Share functionality removed — no Intent import required
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -19,7 +18,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -36,7 +34,6 @@ import kotlinx.coroutines.launch
 fun FriendsScreen(
     authViewModel: AuthViewModelContract,
     viewModel: FriendsViewModel,
-    onBackClick: () -> Unit
 ) {
 
     // Screen state and authentication info
@@ -163,7 +160,11 @@ fun FriendsScreen(
                                 TextButton(onClick = { viewModel.rejectFriendRequest(req._id) }) { Text(stringResource(R.string.reject)) }
                             }
                         }
-                        Divider()
+                        HorizontalDivider(
+                            Modifier,
+                            DividerDefaults.Thickness,
+                            DividerDefaults.color
+                        )
                     }
                 }
             }
@@ -187,7 +188,11 @@ fun FriendsScreen(
                             Text(friend.name)
                             TextButton(onClick = { viewModel.removeFriend(friend.id) }) { Text(stringResource(R.string.remove)) }
                         }
-                        Divider()
+                        HorizontalDivider(
+                            Modifier,
+                            DividerDefaults.Thickness,
+                            DividerDefaults.color
+                        )
                     }
                 }
             }

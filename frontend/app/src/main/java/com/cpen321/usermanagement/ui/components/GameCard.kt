@@ -1,5 +1,6 @@
 package com.cpen321.usermanagement.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -185,6 +186,7 @@ private fun formatGameTime(startTimeUTC: String): String {
         val outputFormat = SimpleDateFormat("MMM dd, h:mm a", Locale.getDefault())
         date?.let { outputFormat.format(it) } ?: startTimeUTC
     } catch (e: Exception) {
+        Log.e("GameCard", "Error formatting game time: $e")
         startTimeUTC
     }
 }

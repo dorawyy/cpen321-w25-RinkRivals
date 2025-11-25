@@ -6,7 +6,7 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import { NHLService, GameStatus } from '../../../src/services/nhl.service';
+import { NHLService, GameStatus } from '../../src/services/nhl.service';
 import axios from 'axios';
 
 /**

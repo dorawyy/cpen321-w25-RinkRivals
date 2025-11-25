@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
@@ -123,7 +123,7 @@ private fun ChallengesContent(
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { ChallengesTopBar(onBackClick = callbacks.onBackClick) },
+        topBar = { ChallengesTopBar() },
         content = {
             ChallengesBody(
                 paddingValues = it,
@@ -137,7 +137,6 @@ private fun ChallengesContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChallengesTopBar(
-    onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
@@ -167,7 +166,7 @@ private fun ChallengesBody(
         when {
             uiState.isLoadingChallenges -> CircularProgressIndicator()
             uiState.errorMessage != null -> Text(
-                text = uiState.errorMessage!!,
+                text = uiState.errorMessage,
                 color = Color.Red,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(16.dp)
@@ -339,7 +338,7 @@ fun ChallengeItem(challenge: Challenge, onClick: () -> Unit = {}) {
                 }
             }
             Icon(
-                imageVector = Icons.Default.ArrowForward,
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 modifier = Modifier.padding(start = 16.dp),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary

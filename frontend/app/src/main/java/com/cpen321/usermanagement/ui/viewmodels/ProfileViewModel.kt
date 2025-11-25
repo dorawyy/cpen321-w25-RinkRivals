@@ -4,7 +4,6 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cpen321.usermanagement.data.remote.dto.PublicProfileData
 import com.cpen321.usermanagement.data.remote.dto.User
 import com.cpen321.usermanagement.data.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -79,23 +78,6 @@ class ProfileViewModel @Inject constructor(
 
 
 
-        }
-    }
-
-    suspend fun getUserInfoById(userId: String): PublicProfileData? {
-        return try {
-            val profileResult = profileRepository.getUserInfoById(userId)
-            if (profileResult.isSuccess) {
-                profileResult.getOrNull()
-            } else {
-                val error = profileResult.exceptionOrNull()
-                val errorMessage = error?.message ?: "Failed to load profile by id"
-                Log.e(TAG, "Failed to load profile by id: $errorMessage", error)
-                null
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error in getUserInfoById", e)
-            null
         }
     }
 

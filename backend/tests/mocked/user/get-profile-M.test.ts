@@ -14,7 +14,6 @@ import router from '../../../src/routes/routes';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import { userModel } from '../../../src/models/user.model';
-import { friendModel } from '../../../src/models/friends.model';
 import path from 'path';
 
 // Load test environment variables
@@ -25,8 +24,8 @@ const app = express();
 app.use(express.json());
 app.use('/api', router);
 
-// Interface GET /api/friends/list
-describe('Mocked GET /api/friends/list', () => {
+// Interface GET /api/user/profile
+describe('Mocked GET /api/user/profile', () => {
   let authToken: string;
   let testUserId: string;
 
@@ -44,13 +43,18 @@ describe('Mocked GET /api/friends/list', () => {
       process.env.JWT_SECRET || 'test-secret'
     );
 
-    // Mock userModel.findById
+    // Mock userModel.findById for auth middleware
     jest.spyOn(userModel, 'findById').mockImplementation(async (id: any) => {
       return {
         _id: id,
         googleId: 'mock-google-id',
         email: 'mock@example.com',
         name: 'Mock User',
+        friendCode: 'MOCK123456',
+        bio: 'Test bio',
+        profilePicture: 'https://example.com/pic.jpg',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       } as any;
     });
   });
@@ -65,42 +69,23 @@ describe('Mocked GET /api/friends/list', () => {
     jest.restoreAllMocks();
   });
 
-  // Mocked behavior: Database error when fetching friends
+  // Mocked behavior: Get profile returns successfully
   // Input: Authenticated user
-  // Expected behavior: Returns 500 error
-  // Expected output: 500 status
-  // Note: This tests error handling that can't be provoked in unmocked tests
-  test('Returns 500 when database error occurs', async () => {
-    // Mock friendModel.getFriends to throw error
-    jest
-      .spyOn(friendModel, 'getFriends')
-      .mockRejectedValueOnce(new Error('Database connection failed'));
-
+  // Expected behavior: Returns user profile data
+  // Expected output: 200 status with user data
+  test('Successfully returns user profile', async () => {
     const response = await request(app)
-      .get('/api/friends/list')
+      .get('/api/user/profile')
       .set('Authorization', `Bearer ${authToken}`);
 
-    expect(response.status).toBe(500);
-    expect(friendModel.getFriends).toHaveBeenCalledTimes(1);
-    expect(friendModel.getFriends).toHaveBeenCalledWith(testUserId);
-  });
-
-  // Mocked behavior: Database timeout when fetching friends
-  // Input: Authenticated user
-  // Expected behavior: Returns 500 error
-  // Expected output: 500 status
-  test('Returns 500 when database timeout occurs', async () => {
-    // Mock friendModel.getFriends to throw timeout error
-    jest
-      .spyOn(friendModel, 'getFriends')
-      .mockRejectedValueOnce(new Error('Query timeout'));
-
-    const response = await request(app)
-      .get('/api/friends/list')
-      .set('Authorization', `Bearer ${authToken}`);
-
-    expect(response.status).toBe(500);
-    expect(friendModel.getFriends).toHaveBeenCalledTimes(1);
-    expect(friendModel.getFriends).toHaveBeenCalledWith(testUserId);
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty(
+      'message',
+      'Profile fetched successfully'
+    );
+    expect(response.body.data).toHaveProperty('user');
+    expect(response.body.data.user).toHaveProperty('_id');
+    expect(response.body.data.user).toHaveProperty('name', 'Mock User');
+    expect(userModel.findById).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,27 +1,18 @@
 package com.cpen321.usermanagement.data.repository
 
-import android.content.Context
-import android.net.Uri
 import android.util.Log
 import com.cpen321.usermanagement.data.local.preferences.TokenManager
-import com.cpen321.usermanagement.data.remote.api.ImageInterface
 import com.cpen321.usermanagement.data.remote.api.RetrofitClient
 import com.cpen321.usermanagement.data.remote.api.UserInterface
 import com.cpen321.usermanagement.data.remote.dto.PublicProfileData
 import com.cpen321.usermanagement.data.remote.dto.UpdateProfileRequest
 import com.cpen321.usermanagement.data.remote.dto.User
 import com.cpen321.usermanagement.utils.JsonUtils.parseErrorMessage
-import com.cpen321.usermanagement.utils.MediaUtils.uriToFile
-import dagger.hilt.android.qualifiers.ApplicationContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ProfileRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val userInterface: UserInterface,
     private val tokenManager: TokenManager
 ) : ProfileRepository {

@@ -1,7 +1,6 @@
 
 package com.cpen321.usermanagement.ui.screens
 
-import Icon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,6 +23,7 @@ import com.cpen321.usermanagement.R
 import com.cpen321.usermanagement.data.local.preferences.EventCondition
 import com.cpen321.usermanagement.data.local.preferences.NhlDataManager
 import com.cpen321.usermanagement.data.remote.dto.Game
+import com.cpen321.usermanagement.ui.components.Icon
 import com.cpen321.usermanagement.ui.components.TeamMatchup
 import com.cpen321.usermanagement.ui.viewmodels.AuthViewModelContract
 import com.cpen321.usermanagement.ui.viewmodels.TicketsViewModel

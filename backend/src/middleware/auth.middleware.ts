@@ -46,18 +46,18 @@ export const authenticateToken: RequestHandler = async (
 
     next();
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      res.status(401).json({
-        error: 'Invalid token',
-        message: 'Token is malformed or expired',
-      });
-      return;
-    }
-
     if (error instanceof jwt.TokenExpiredError) {
       res.status(401).json({
         error: 'Token expired',
         message: 'Please login again',
+      });
+      return;
+    }
+
+    if (error instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({
+        error: 'Invalid token',
+        message: 'Token is malformed or expired',
       });
       return;
     }

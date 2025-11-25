@@ -277,10 +277,7 @@ private fun AppNavHost(
         composable(NavRoutes.MAIN) {
             MainScreen(
                 mainViewModel = mainViewModel,
-                onProfileClick = { navigationStateManager.navigateToProfile() },
                 onTicketClick = { navigationStateManager.navigateToTickets() },
-                onFriendsClick = { navigationStateManager.navigateToFriends() },
-                onChallengeClick = { navigationStateManager.navigateToChallenges() }
             )
         }
 
@@ -349,7 +346,6 @@ private fun AppNavHost(
             FriendsScreen(
                 viewModel = hiltViewModel(),       // FriendsViewModel scoped to screen
                 authViewModel = authViewModel,     // pass the shared AuthViewModel
-                onBackClick = { navigationStateManager.navigateBack() }
             )
         }
         composable(NavRoutes.CHALLENGES) {

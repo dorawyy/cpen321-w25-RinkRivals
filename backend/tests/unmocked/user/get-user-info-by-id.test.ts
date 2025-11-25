@@ -183,4 +183,34 @@ describe('Unmocked GET /api/user/:id', () => {
     // Cleanup
     await userModel.delete(minimalUser._id);
   });
+
+  // Model test: userModel.findById returns null for non-existent user
+  // Input: Non-existent user ID
+  // Expected behavior: Returns null
+  // Expected output: null
+  test('userModel.findById returns null when user not found', async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    const result = await userModel.findById(fakeId);
+
+    expect(result).toBeNull();
+  });
+
+  // Model test: userModel.findUserInfoById returns null for non-existent user
+  // Input: Non-existent user ID string
+  // Expected behavior: Returns null
+  // Expected output: null
+  test('userModel.findUserInfoById returns null when user not found', async () => {
+    const fakeId = new mongoose.Types.ObjectId().toString();
+    const result = await userModel.findUserInfoById(fakeId);
+
+    expect(result).toBeNull();
+  });
+
+  // Model test: userModel.findById throws error with invalid ID format
+  // Input: Invalid ObjectId string
+  // Expected behavior: Throws error
+  // Expected output: Error thrown
+  test('userModel.findById throws error with invalid ID format', async () => {
+    await expect(userModel.findById('invalid-id' as any)).rejects.toThrow();
+  });
 });

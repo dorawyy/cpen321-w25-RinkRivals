@@ -88,4 +88,76 @@ describe('Mocked GET /api/user/profile', () => {
     expect(response.body.data.user).toHaveProperty('name', 'Mock User');
     expect(userModel.findById).toHaveBeenCalledTimes(1);
   });
+
+  // Model test: Database error in userModel.findByFriendCode throws error
+  // Input: Database connection error
+  // Expected behavior: Throws 'Failed to find user' error
+  // Expected output: Error thrown
+  test('userModel.findByFriendCode throws error when database fails', async () => {
+    const friendCode = 'TEST123456';
+
+    jest
+      .spyOn(userModel['user'], 'findOne')
+      .mockRejectedValueOnce(new Error('Database connection lost'));
+
+    await expect(userModel.findByFriendCode(friendCode)).rejects.toThrow(
+      'Failed to find user'
+    );
+  });
+
+  // Model test: Database error during create operation (non-validation error)
+  // Input: Database connection error during create
+  // Expected behavior: Throws 'Failed to update user' error (note: error message is wrong in code)
+  // Expected output: Error thrown
+  test('userModel.create throws error when database create fails', async () => {
+    // Mock findOne to return null (unique friend code)
+    jest.spyOn(userModel['user'], 'findOne').mockResolvedValueOnce(null);
+
+    // Mock create to throw a database error
+    jest
+      .spyOn(userModel['user'], 'create')
+      .mockRejectedValueOnce(new Error('Database connection lost'));
+
+    await expect(
+      userModel.create({
+        googleId: 'google-123',
+        email: 'test@example.com',
+        name: 'Test User',
+      })
+    ).rejects.toThrow('Failed to update user');
+  });
+
+  // Model test: Friend code collision handled during create
+  // Input: First generated friend code already exists, second is unique
+  // Expected behavior: Loops until unique code found, creates user successfully
+  // Expected output: User created with unique friend code
+  test('userModel.create handles friend code collision', async () => {
+    const mockUser = {
+      _id: new mongoose.Types.ObjectId(),
+      googleId: 'google-collision-test',
+      email: 'collision@test.com',
+      name: 'Collision Test User',
+      friendCode: 'UNIQUE1234',
+    };
+
+    // First findOne returns existing user (collision), second returns null (unique)
+    jest
+      .spyOn(userModel['user'], 'findOne')
+      .mockResolvedValueOnce({ friendCode: 'COLIDE1234' } as any) // Collision
+      .mockResolvedValueOnce(null); // Unique
+
+    // Mock create to return the new user
+    jest
+      .spyOn(userModel['user'], 'create')
+      .mockResolvedValueOnce(mockUser as any);
+
+    const result = await userModel.create({
+      googleId: 'google-collision-test',
+      email: 'collision@test.com',
+      name: 'Collision Test User',
+    });
+
+    expect(result).toBeDefined();
+    expect(userModel['user'].findOne).toHaveBeenCalledTimes(2); // Called twice due to collision
+  });
 });

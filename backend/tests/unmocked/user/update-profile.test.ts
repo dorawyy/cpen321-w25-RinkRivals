@@ -286,4 +286,46 @@ describe('Unmocked PUT /api/user/profile', () => {
       originalUser!.googleId
     );
   });
+
+  // Model test: userModel.create throws validation error with invalid email
+  // Input: User data with malformed email
+  // Expected behavior: Throws validation error
+  // Expected output: Error with 'Invalid update data' message
+  test('userModel.create throws validation error with invalid email', async () => {
+    const invalidData = {
+      googleId: 'google-validation-test-' + Date.now(),
+      email: 'not-an-email',
+      name: 'Test User',
+    };
+
+    await expect(userModel.create(invalidData)).rejects.toThrow(
+      'Invalid update data'
+    );
+  });
+
+  // Model test: userModel.create throws validation error with missing required fields
+  // Input: User data missing required name and googleId
+  // Expected behavior: Throws validation error
+  // Expected output: Error with 'Invalid update data' message
+  test('userModel.create throws validation error with missing fields', async () => {
+    const invalidData = {
+      email: 'valid@test.com',
+      // Missing required 'name' and 'googleId' fields
+    } as any;
+
+    await expect(userModel.create(invalidData)).rejects.toThrow(
+      'Invalid update data'
+    );
+  });
+
+  // Model test: userModel.update handles empty data gracefully
+  // Input: Empty update object
+  // Expected behavior: Validation passes, returns null for non-existent user
+  // Expected output: null
+  test('userModel.update handles empty data gracefully', async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    const result = await userModel.update(fakeId, {});
+
+    expect(result).toBeNull();
+  });
 });

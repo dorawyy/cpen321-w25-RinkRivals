@@ -195,4 +195,21 @@ describe('Mocked PUT /api/user/profile', () => {
     );
     expect(userModel.update).toHaveBeenCalledTimes(1);
   });
+
+  // Model test: Database error in userModel.update throws error
+  // Input: Database connection error
+  // Expected behavior: Throws 'Failed to update user' error
+  // Expected output: Error thrown
+  test('userModel.update throws error when database fails', async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    const updateData = { name: 'Updated Name' };
+
+    jest
+      .spyOn(userModel['user'], 'findByIdAndUpdate')
+      .mockRejectedValueOnce(new Error('Database connection lost'));
+
+    await expect(userModel.update(fakeId, updateData)).rejects.toThrow(
+      'Failed to update user'
+    );
+  });
 });

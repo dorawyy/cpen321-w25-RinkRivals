@@ -228,4 +228,20 @@ describe('Mocked DELETE /api/user/profile', () => {
     expect(response.body).toHaveProperty('message', 'Failed to delete user');
     expect(MediaService.deleteAllUserImages).toHaveBeenCalledTimes(1);
   });
+
+  // Model test: Database error in userModel.delete throws error
+  // Input: Database connection error during findByIdAndDelete
+  // Expected behavior: Throws 'Failed to delete user' error
+  // Expected output: Error thrown
+  test('userModel.delete throws error when database fails', async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+
+    jest
+      .spyOn(userModel['user'], 'findByIdAndDelete')
+      .mockRejectedValueOnce(new Error('Database connection lost'));
+
+    await expect(userModel.delete(fakeId)).rejects.toThrow(
+      'Failed to delete user'
+    );
+  });
 });

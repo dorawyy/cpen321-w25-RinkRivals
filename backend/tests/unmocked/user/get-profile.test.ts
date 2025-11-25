@@ -168,4 +168,92 @@ describe('Unmocked GET /api/user/profile', () => {
     // Cleanup
     await userModel.delete(minimalUser._id);
   });
+
+  // Model test: userModel.findByGoogleId returns null for non-existent googleId
+  // Input: Non-existent Google ID
+  // Expected behavior: Returns null
+  // Expected output: null
+  test('userModel.findByGoogleId returns null when not found', async () => {
+    const result = await userModel.findByGoogleId('non-existent-google-id');
+
+    expect(result).toBeNull();
+  });
+
+  // Model test: userModel.findByFriendCode returns null for non-existent code
+  // Input: Non-existent friend code
+  // Expected behavior: Returns null
+  // Expected output: null
+  test('userModel.findByFriendCode returns null when not found', async () => {
+    const result = await userModel.findByFriendCode('NOTEXIST123');
+
+    expect(result).toBeNull();
+  });
+
+  // Model test: userModel.create generates unique 6-character friend code
+  // Input: Valid user data
+  // Expected behavior: Creates user with generated friend code
+  // Expected output: User with 6-character alphanumeric friend code
+  test('userModel.create generates unique friend code', async () => {
+    const testUser = {
+      googleId: 'google-friendcode-test-' + Date.now(),
+      email: `friendcode-test-${Date.now()}@test.com`,
+      name: 'Friend Code Test User',
+    };
+
+    const user = await userModel.create(testUser);
+
+    expect(user).toHaveProperty('friendCode');
+    expect(user.friendCode).toHaveLength(6);
+    expect(user.friendCode).toMatch(/^[A-Z0-9]+$/);
+
+    // Cleanup
+    await userModel.delete(user._id);
+  });
+
+  // Model test: userModel.findByGoogleId returns full user
+  // Input: Existing Google ID
+  // Expected behavior: Returns full user object
+  // Expected output: User with all fields
+  test('userModel.findByGoogleId returns full user object', async () => {
+    const testUser = {
+      googleId: 'google-findtest-' + Date.now(),
+      email: `findtest-${Date.now()}@test.com`,
+      name: 'Find Test User',
+    };
+
+    const createdUser = await userModel.create(testUser);
+    const foundUser = await userModel.findByGoogleId(testUser.googleId);
+
+    expect(foundUser).not.toBeNull();
+    expect(foundUser?._id.toString()).toBe(createdUser._id.toString());
+    expect(foundUser?.googleId).toBe(testUser.googleId);
+    expect(foundUser?.email).toBe(testUser.email);
+
+    // Cleanup
+    await userModel.delete(createdUser._id);
+  });
+
+  // Model test: userModel.findById returns full user object
+  // Input: Existing user ID
+  // Expected behavior: Returns full user object
+  // Expected output: User with all fields
+  test('userModel.findById returns full user object', async () => {
+    const testUser = {
+      googleId: 'google-findbyid-' + Date.now(),
+      email: `findbyid-${Date.now()}@test.com`,
+      name: 'FindById Test User',
+    };
+
+    const createdUser = await userModel.create(testUser);
+    const foundUser = await userModel.findById(createdUser._id);
+
+    expect(foundUser).not.toBeNull();
+    expect(foundUser?._id.toString()).toBe(createdUser._id.toString());
+    expect(foundUser?.googleId).toBe(testUser.googleId);
+    expect(foundUser?.email).toBe(testUser.email);
+    expect(foundUser?.name).toBe(testUser.name);
+
+    // Cleanup
+    await userModel.delete(createdUser._id);
+  });
 });

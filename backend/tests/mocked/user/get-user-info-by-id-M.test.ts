@@ -161,4 +161,36 @@ describe('Mocked GET /api/user/:id', () => {
     );
     expect(userModel.findUserInfoById).toHaveBeenCalledTimes(1);
   });
+
+  // Model test: Database error in userModel.findUserInfoById throws error
+  // Input: Database connection error
+  // Expected behavior: Throws 'Failed to find user info' error
+  // Expected output: Error thrown
+  test('userModel.findUserInfoById throws error when database fails', async () => {
+    const userId = new mongoose.Types.ObjectId().toString();
+
+    jest
+      .spyOn(userModel['user'], 'findById')
+      .mockRejectedValueOnce(new Error('Database connection lost'));
+
+    await expect(userModel.findUserInfoById(userId)).rejects.toThrow(
+      'Failed to find user info'
+    );
+  });
+
+  // Model test: Database error in userModel.findByGoogleId throws error
+  // Input: Database connection error
+  // Expected behavior: Throws 'Failed to find user' error
+  // Expected output: Error thrown
+  test('userModel.findByGoogleId throws error when database fails', async () => {
+    const googleId = 'google-test-123';
+
+    jest
+      .spyOn(userModel['user'], 'findOne')
+      .mockRejectedValueOnce(new Error('Database connection lost'));
+
+    await expect(userModel.findByGoogleId(googleId)).rejects.toThrow(
+      'Failed to find user'
+    );
+  });
 });

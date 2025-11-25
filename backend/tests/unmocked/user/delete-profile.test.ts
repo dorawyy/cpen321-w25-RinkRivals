@@ -265,4 +265,14 @@ describe('Unmocked DELETE /api/user/profile', () => {
     const userByCode = await userModel.findByFriendCode(friendCode);
     expect(userByCode).toBeNull();
   });
+
+  // Model test: userModel.delete handles non-existent user without error
+  // Input: Non-existent user ID
+  // Expected behavior: Completes without error
+  // Expected output: void (no error thrown)
+  test('userModel.delete handles non-existent user without error', async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+
+    await expect(userModel.delete(fakeId)).resolves.toBeUndefined();
+  });
 });

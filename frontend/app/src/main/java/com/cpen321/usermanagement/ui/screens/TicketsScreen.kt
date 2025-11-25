@@ -97,7 +97,8 @@ private fun TicketsContent(
             isLoading = uiState.isLoadingTickets,
             ticketsViewModel = ticketsViewModel,
             onCreateTicketClick = callbacks.onCreateTicketClick,
-            snackbarHostState = snackbarHostState
+            snackbarHostState = snackbarHostState,
+            uiState = uiState
         )
     }
 }
@@ -132,9 +133,11 @@ private fun TicketsBody(
     ticketsViewModel: TicketsViewModel,
     onCreateTicketClick: () -> Unit,
     modifier: Modifier = Modifier,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    uiState: TicketsUiState
 ) {
-
+    val nhlState by ticketsViewModel.nhlDataManager.uiState.collectAsState()
+    
     // For each ticket, find its full game data from the NhlDataManager.
     // If the game is not found (finished games), keep the original ticket
     val enrichedTickets = remember(allTickets, ticketsViewModel.nhlDataManager.getGamesForTickets()) {
@@ -176,7 +179,8 @@ private fun TicketsBody(
                     modifier = Modifier.fillMaxSize(),
                     allTickets = enrichedTickets,
                     ticketsViewModel = ticketsViewModel,
-                    snackbarHostState = snackbarHostState
+                    snackbarHostState = snackbarHostState,
+                    uiState = uiState
                 )
             }
         }
@@ -198,7 +202,8 @@ fun TicketsList(
     modifier: Modifier = Modifier,
     allTickets: List<BingoTicket> = emptyList(),
     ticketsViewModel: TicketsViewModel,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    uiState: TicketsUiState
 ) {
     // print all ticket game states
     println("All tickets: $allTickets")
@@ -227,7 +232,9 @@ fun TicketsList(
                         gameState = gameState,
                         tickets = ticketsInState,
                         ticketsViewModel = ticketsViewModel,
-                        snackbarHostState = snackbarHostState
+                        snackbarHostState = snackbarHostState,
+                        isExpanded = uiState.expandedSections.contains(gameState),
+                        onToggle = { ticketsViewModel.toggleSection(gameState) }
                     )
                 }
             }
@@ -240,10 +247,11 @@ fun TicketsList(
 private fun CollapsibleTicketsSection(
     gameState: String,
     tickets: List<BingoTicket>,
-    ticketsViewModel: TicketsViewModel,snackbarHostState: SnackbarHostState
+    ticketsViewModel: TicketsViewModel,
+    snackbarHostState: SnackbarHostState,
+    isExpanded: Boolean,
+    onToggle: () -> Unit
 ) {
-    // State is managed internally, just like in ChallengesScreen
-    var isExpanded by remember { mutableStateOf(gameState.uppercase() == "LIVE") }
     val scope = rememberCoroutineScope()
 
     // 1. More descriptive names for the UI
@@ -285,7 +293,7 @@ private fun CollapsibleTicketsSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { isExpanded = !isExpanded }
+                .clickable { onToggle() }
                 .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween

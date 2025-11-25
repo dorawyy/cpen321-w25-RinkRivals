@@ -1,15 +1,22 @@
 package com.cpen321.usermanagement.fakes
 
-import com.cpen321.usermanagement.data.local.preferences.EventCategory
 import com.cpen321.usermanagement.data.local.preferences.ComparisonType
+import com.cpen321.usermanagement.data.local.preferences.EventCategory
 import com.cpen321.usermanagement.data.local.preferences.EventCondition
 import com.cpen321.usermanagement.data.local.preferences.NhlDataManager
 import com.cpen321.usermanagement.data.local.preferences.NhlDataState
+import com.cpen321.usermanagement.data.remote.dto.Boxscore
 import com.cpen321.usermanagement.data.remote.dto.Game
 import com.cpen321.usermanagement.data.remote.dto.GameDay
+import com.cpen321.usermanagement.data.remote.dto.GoalieStats
 import com.cpen321.usermanagement.data.remote.dto.Name
+import com.cpen321.usermanagement.data.remote.dto.NameWrapper
 import com.cpen321.usermanagement.data.remote.dto.PeriodDescriptor
+import com.cpen321.usermanagement.data.remote.dto.PlayerByGameStats
+import com.cpen321.usermanagement.data.remote.dto.PlayerStats
 import com.cpen321.usermanagement.data.remote.dto.Team
+import com.cpen321.usermanagement.data.remote.dto.TeamInfo
+import com.cpen321.usermanagement.data.remote.dto.TeamPlayers
 import com.cpen321.usermanagement.data.remote.dto.TvBroadcast
 import com.cpen321.usermanagement.data.remote.dto.Venue
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -84,26 +91,74 @@ class FakeNhlDataManager : NhlDataManager {
         EventCondition(
             id = "E1",
             category = EventCategory.FORWARD,
-            subject = "player.goals",
+            subject = "goals",
             comparison = ComparisonType.GREATER_THAN,
             threshold = 2,
-            labelTemplates = listOf("Player scores 2+ goals")
+            playerName = "J.T. Miller",
+            teamAbbrev = "VAN"
         ),
         EventCondition(
             id = "E2",
             category = EventCategory.TEAM,
-            subject = "team.goals",
+            subject = "goals",
             comparison = ComparisonType.GREATER_THAN,
             threshold = 3,
-            labelTemplates = listOf("Team scores 3+ goals")
+            teamAbbrev = "VAN"
         ),
         EventCondition(
             id = "E3",
             category = EventCategory.GOALIE,
-            subject = "player.saves",
+            subject = "saves",
             comparison = ComparisonType.GREATER_THAN,
             threshold = 25,
-            labelTemplates = listOf("Goalie makes 25+ saves")
+            playerName = "Thatcher Demko",
+            teamAbbrev = "VAN"
+        )
+    )
+
+    private val fakeBoxscore = Boxscore(
+        id = 1L,
+        season = 20242025,
+        gameType = 2,
+        gameDate = "2025-03-10",
+        gameState = "FUT",
+        limitedScoring = false,
+        periodDescriptor = PeriodDescriptor(
+            number = 0,
+            periodType = "REG",
+            maxRegulationPeriods = 3
+        ),
+        awayTeam = TeamInfo(
+            id = 15,
+            abbrev = "TOR",
+            score = 0,
+            sog = 0,
+            commonName = NameWrapper(default = "Maple Leafs"),
+            placeName = NameWrapper(default = "Toronto"),
+            logo = "",
+            darkLogo = ""
+        ),
+        homeTeam = TeamInfo(
+            id = 10,
+            abbrev = "VAN",
+            score = 0,
+            sog = 0,
+            commonName = NameWrapper(default = "Canucks"),
+            placeName = NameWrapper(default = "Vancouver"),
+            logo = "",
+            darkLogo = ""
+        ),
+        playerByGameStats = PlayerByGameStats(
+            awayTeam = TeamPlayers(
+                forwards = emptyList<PlayerStats>(),
+                defense = emptyList<PlayerStats>(),
+                goalies = emptyList<GoalieStats>()
+            ),
+            homeTeam = TeamPlayers(
+                forwards = emptyList<PlayerStats>(),
+                defense = emptyList<PlayerStats>(),
+                goalies = emptyList<GoalieStats>()
+            )
         )
     )
 
@@ -138,5 +193,39 @@ class FakeNhlDataManager : NhlDataManager {
 
     override suspend fun refreshSchedule(): Result<List<GameDay>> {
         return Result.success(listOf(fakeGameDay))
+    }
+
+    override suspend fun getBoxscore(gameId: Long): Result<Boxscore> {
+        return Result.success(fakeBoxscore)
+    }
+
+    override suspend fun isFulfilled(event: EventCondition, boxscore: Boxscore): Boolean {
+        return true
+    }
+
+    override fun formatEventLabel(event: EventCondition): String {
+        val subjectName = when {
+            !event.playerName.isNullOrEmpty() -> event.playerName
+            !event.teamAbbrev.isNullOrEmpty() && event.category in listOf(EventCategory.TEAM, EventCategory.PENALTY) -> event.teamAbbrev
+            else -> "Player"
+        }
+
+        val statName = when (event.subject) {
+            "goals" -> if (event.category == EventCategory.TEAM) "scores total goals" else "scores goals"
+            "assists" -> "assists on a goal"
+            "hits" -> "delivers hits"
+            "sog" -> if (event.category == EventCategory.TEAM) "total shots" else "shots on goal"
+            "blockedShots" -> "blocks shots"
+            "saves" -> "makes saves"
+            "penaltyMinutes" -> "takes penalty minutes"
+            else -> event.subject ?: "unknown stat"
+        }
+
+        val comparison = when (event.comparison) {
+            ComparisonType.GREATER_THAN -> "${event.threshold}+"
+            ComparisonType.LESS_THAN -> "< ${event.threshold}"
+        }
+
+        return "$subjectName $statName ($comparison)"
     }
 }

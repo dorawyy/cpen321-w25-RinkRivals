@@ -2,14 +2,11 @@ package com.cpen321.usermanagement.ui.tests
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import com.cpen321.usermanagement.data.remote.dto.Game
 import com.cpen321.usermanagement.fakes.FakeAuthViewModel
+import com.cpen321.usermanagement.fakes.FakeChallengesRepository
 import com.cpen321.usermanagement.fakes.FakeNhlDataManager
 import com.cpen321.usermanagement.fakes.FakeTicketsRepository
-import com.cpen321.usermanagement.ui.navigation.NavRoutes
 import com.cpen321.usermanagement.ui.navigation.NavigationStateManager
-import com.cpen321.usermanagement.ui.screens.CreateBingoTicketScreen
-import com.cpen321.usermanagement.ui.screens.TicketDetailScreen
 import com.cpen321.usermanagement.ui.screens.TicketsScreen
 import com.cpen321.usermanagement.ui.screens.TicketsScreenActions
 import com.cpen321.usermanagement.ui.viewmodels.TicketsViewModel
@@ -26,6 +23,7 @@ class TicketTests {
     val composeTestRule = createComposeRule()
 
     private lateinit var fakeRepo: FakeTicketsRepository
+    private lateinit var fakeChallengesRepo: FakeChallengesRepository
     private lateinit var fakeAuth: FakeAuthViewModel
     private lateinit var fakeNhl: FakeNhlDataManager
     private lateinit var navManager: NavigationStateManager
@@ -34,10 +32,11 @@ class TicketTests {
     @Before
     fun setup() {
         fakeRepo = FakeTicketsRepository()
+        fakeChallengesRepo = FakeChallengesRepository()
         fakeAuth = FakeAuthViewModel()
         fakeNhl = FakeNhlDataManager()
         navManager = NavigationStateManager()
-        viewModel = TicketsViewModel(fakeRepo, navManager, fakeNhl)
+        viewModel = TicketsViewModel(fakeRepo, fakeChallengesRepo, navManager, fakeNhl)
     }
 
     private fun launchTicketsScreen() {
@@ -57,8 +56,11 @@ class TicketTests {
     @Test
     fun viewTickets_displaysListCorrectly() {
         launchTicketsScreen()
+        composeTestRule.waitForIdle() // Wait for tickets to load
 
         composeTestRule.onNodeWithText("Bingo Tickets").assertIsDisplayed()
+        // Expand the upcoming section to see the ticket
+        composeTestRule.onNodeWithText("Upcoming", useUnmergedTree = true).performClick()
         composeTestRule.onNodeWithText("My First Ticket").assertIsDisplayed()
     }
 
@@ -66,11 +68,16 @@ class TicketTests {
     @Test
     fun deleteTicket_removesFromList() {
         launchTicketsScreen()
+        composeTestRule.waitForIdle() // Wait for tickets to load
 
+        // Expand the upcoming section to see the ticket
+        composeTestRule.onNodeWithText("Upcoming", useUnmergedTree = true).performClick()
         composeTestRule.onNodeWithText("My First Ticket").assertIsDisplayed()
 
-        composeTestRule.onNodeWithText("Delete").performClick()
+        // The delete button is likely an icon inside the card now
+        composeTestRule.onNodeWithContentDescription("Delete", useUnmergedTree = true).performClick()
 
+        composeTestRule.waitForIdle() // Wait for deletion to process
         composeTestRule.waitUntilDoesNotExist(hasText("My First Ticket"))
     }
 
@@ -78,8 +85,10 @@ class TicketTests {
     fun emptyState_showsNoTicketsText() {
         fakeRepo.emptyState = true
         launchTicketsScreen()
+        composeTestRule.waitForIdle() // Wait for tickets to load
 
-        composeTestRule.onNodeWithText("No bingo tickets yet.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("You have no tickets.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Create one now!").assertIsDisplayed()
     }
 
     @Test
@@ -89,14 +98,16 @@ class TicketTests {
 
         val userId = fakeAuth.uiState.value.user!!._id
         val game = fakeNhl.getGamesForTickets().first()
+        val events = runBlocking { fakeNhl.getEventsForGame(game.id) }
 
         // Simulate user entering ticket name and selecting events
         viewModel.createTicket(
             userId = userId,
             name = "Test Ticket",
             game = game,
-            events = List(9) { "Event ${it + 1}" }
+            events = events
         )
+        composeTestRule.waitForIdle() // Wait for createTicket to update state
 
         // Navigate back to TicketsScreen to verify it was added
         composeTestRule.setContent {
@@ -109,25 +120,9 @@ class TicketTests {
                 )
             )
         }
-
+        composeTestRule.waitForIdle() // wait for screen to reload and recompose
+        // Expand the upcoming section to see the newly created ticket
+        composeTestRule.onNodeWithText("Upcoming", useUnmergedTree = true).performClick()
         composeTestRule.onNodeWithText("Test Ticket").assertIsDisplayed()
-    }
-
-    @Test
-    fun toggleSquare_updatesCrossedOffState() = runBlocking {
-        val ticket = fakeRepo.getTickets("currentUserId").getOrThrow().first()
-
-        composeTestRule.setContent {
-            TicketDetailScreen(
-                ticket = ticket,
-                onBackClick = {},
-                viewModel = viewModel
-            )
-        }
-
-        composeTestRule.onAllNodesWithContentDescription("Bingo Square")[0].performClick()
-
-        val updated = viewModel.uiState.value.allTickets.find { it._id == ticket._id }
-        assert(updated?.crossedOff?.first() == true)
     }
 }

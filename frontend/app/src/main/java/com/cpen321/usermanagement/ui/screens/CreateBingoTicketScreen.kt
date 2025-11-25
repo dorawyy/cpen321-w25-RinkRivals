@@ -1,3 +1,4 @@
+
 package com.cpen321.usermanagement.ui.screens
 
 import androidx.compose.foundation.background
@@ -5,8 +6,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.cpen321.usermanagement.R
 import com.cpen321.usermanagement.data.local.preferences.EventCondition
 import com.cpen321.usermanagement.data.local.preferences.NhlDataManager
@@ -159,6 +161,7 @@ fun CreateBingoTicketScreen(
         // Event Picker Dialog
         showEventPickerForIndex?.let { index ->
             EventPickerDialog(
+                game = selectedGame,
                 allEvents = availableEvents,
                 selectedEvents = selectedEvents.filterNotNull(),
                 onDismiss = { showEventPickerForIndex = null },
@@ -281,6 +284,7 @@ private fun BingoSquare(
             Box(Modifier.fillMaxSize()) {
                 Text(
                     text = eventText,
+                    fontSize = 16.sp,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
                         .align(Alignment.Center)
@@ -301,6 +305,7 @@ private fun BingoSquare(
 
 @Composable
 private fun EventPickerDialog(
+    game: Game?,
     allEvents: List<EventCondition>,
     selectedEvents: List<EventCondition>,
     onDismiss: () -> Unit,
@@ -316,13 +321,35 @@ private fun EventPickerDialog(
                 val available = allEvents.filterNot { it in selectedEvents }
                 items(available.size) { index ->
                     val event = available[index]
-                    Text(
-                        text = nhlDataManager.formatEventLabel(event),
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onEventSelected(event) }
-                            .padding(8.dp)
-                    )
+                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val teamLogoUrl = if (event.teamAbbrev == game?.homeTeam?.abbrev) {
+                            game?.homeTeam?.logo
+                        } else if (event.teamAbbrev == game?.awayTeam?.abbrev) {
+                            game?.awayTeam?.logo
+                        } else {
+                            null
+                        }
+
+                        if (teamLogoUrl != null) {
+                            AsyncImage(
+                                model = teamLogoUrl,
+                                contentDescription = "${event.teamAbbrev} logo",
+                                modifier = Modifier.size(36.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = nhlDataManager.formatEventLabel(event)
+                        )
+                    }
                 }
             }
         }

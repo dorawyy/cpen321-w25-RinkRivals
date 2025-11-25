@@ -26,7 +26,6 @@ class FriendsScreenTest {
             FriendsScreen(
                 authViewModel = fakeAuthViewModel,
                 viewModel = viewModel,
-                onBackClick = {}
             )
         }
     }

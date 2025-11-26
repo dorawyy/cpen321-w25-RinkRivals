@@ -29,19 +29,25 @@ export class MediaService {
       // url comes as "uploads/images/filename.jpg" from the database
       if (url.startsWith(uploadsPath)) {
         const fileName = path.basename(url);
-
-        // Construct path without using user input directly in path.join
-        const allowedDir = path.resolve(IMAGES_DIR);
-        const filePath = `${allowedDir}/${fileName}`;
-        const resolvedPath = path.resolve(filePath);
-
-        // Security check: Ensure the resolved path is still within the allowed directory
-        if (!resolvedPath.startsWith(allowedDir)) {
-          throw new Error('Invalid file path - path traversal detected');
+        
+        // Security: validate filename only contains safe characters (alphanumeric, dash, underscore, dot)
+        const safeFilenamePattern = /^[a-zA-Z0-9_\-\.]+$/;
+        if (!safeFilenamePattern.test(fileName)) {
+          throw new Error('Invalid filename - contains unsafe characters');
         }
+        
+        // Additional check: ensure no path traversal sequences
+        if (fileName.includes('..')) {
+          throw new Error('Invalid filename - path traversal detected');
+        }
+        
+        // Construct file path using only validated filename
+        const allowedDir = path.resolve(IMAGES_DIR);
+        const fullPath = `${allowedDir}${path.sep}${fileName}`;
 
-        if (fs.existsSync(resolvedPath)) {
-          fs.unlinkSync(resolvedPath);
+        // Verify the file actually exists in our directory
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath);
         }
       }
     } catch (error) {

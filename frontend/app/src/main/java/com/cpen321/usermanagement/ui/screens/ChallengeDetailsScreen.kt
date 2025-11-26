@@ -489,9 +489,9 @@ private fun MembersSection(
                 ) {
                     challenge.memberIds.forEach { memberId ->
                         val memberName = when (memberId) {
-                            challenge.ownerId -> allFriends.find { it.id == memberId }?.name ?: user?.name ?: memberId
+                            challenge.ownerId -> allFriends.find { it.id == memberId }?.name ?: user?.name ?: "Deleted User"
                             user?._id -> user.name
-                            else -> allFriends.find { it.id == memberId }?.name ?: memberId
+                            else -> allFriends.find { it.id == memberId }?.name ?: "Deleted User"
                         }
                         
                         val memberProfilePicture = when (memberId) {

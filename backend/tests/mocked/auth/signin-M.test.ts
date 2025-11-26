@@ -12,6 +12,7 @@ import request from 'supertest';
 import express from 'express';
 import router from '../../../src/routes/routes';
 import { authService } from '../../../src/services/auth.service';
+import { userModel } from '../../../src/models/user.model';
 import mongoose from 'mongoose';
 import path from 'path';
 
@@ -243,5 +244,107 @@ describe('Mocked POST /api/auth/signin', () => {
     expect(response.body.data).toHaveProperty('user');
     expect(response.body.data.user).toHaveProperty('email', 'test@example.com');
     expect(authService.signInWithGoogle).toHaveBeenCalledTimes(1);
+  });
+});
+
+// Direct AuthService Tests
+describe('AuthService.signInWithGoogle - Service Level Tests', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    jest.restoreAllMocks();
+  });
+
+  // Service test: User not found during signin
+  // Input: Valid token for non-existent user
+  // Expected behavior: Throws 'User not found' error
+  // Expected output: Error thrown
+  test('Throws error when user does not exist', async () => {
+    (jest
+      .spyOn(authService['googleClient'], 'verifyIdToken') as any)
+      .mockResolvedValueOnce({
+        getPayload: () => ({
+          sub: 'google-nonexistent',
+          email: 'nonexistent@example.com',
+          name: 'Nonexistent User',
+          picture: 'https://example.com/pic.jpg',
+        }),
+      });
+
+    // Mock userModel to return null (user not found)
+    jest.spyOn(userModel, 'findByGoogleId').mockResolvedValueOnce(null);
+
+    await expect(authService.signInWithGoogle('valid-token')).rejects.toThrow(
+      'User not found'
+    );
+  });
+
+  // Service test: Invalid token payload during signin
+  // Input: Google token that returns null payload
+  // Expected behavior: Throws 'Invalid Google token' error
+  // Expected output: Error thrown
+  test('Throws error when Google token payload is null during signin', async () => {
+    (jest
+      .spyOn(authService['googleClient'], 'verifyIdToken') as any)
+      .mockResolvedValueOnce({
+        getPayload: () => null,
+      });
+
+    await expect(authService.signInWithGoogle('invalid-token')).rejects.toThrow(
+      'Invalid Google token'
+    );
+  });
+
+  // Service test: Google verifyIdToken fails during signin
+  // Input: Invalid token that Google rejects
+  // Expected behavior: Throws 'Invalid Google token' error
+  // Expected output: Error thrown
+  test('Throws error when Google verifyIdToken fails during signin', async () => {
+    (jest
+      .spyOn(authService['googleClient'], 'verifyIdToken') as any)
+      .mockRejectedValueOnce(new Error('Token verification failed'));
+
+    await expect(authService.signInWithGoogle('bad-token')).rejects.toThrow(
+      'Invalid Google token'
+    );
+  });
+
+  // Service test: Successful signin with valid token
+  // Input: Valid Google token for existing user
+  // Expected behavior: Finds user and returns token
+  // Expected output: AuthResult with token and user
+  test('Successfully signs in user with valid token', async () => {
+    (jest.spyOn(authService['googleClient'], 'verifyIdToken') as any)
+      .mockResolvedValueOnce({
+        getPayload: () => ({
+          sub: 'google-existing-user',
+          email: 'existing@example.com',
+          name: 'Existing User',
+          picture: 'https://example.com/pic.jpg',
+        }),
+      });
+
+    // Mock userModel to return existing user
+    const mockUser = {
+      _id: new mongoose.Types.ObjectId(),
+      googleId: 'google-existing-user',
+      email: 'existing@example.com',
+      name: 'Existing User',
+      friendCode: 'EXIST12345',
+      profilePicture: 'https://example.com/pic.jpg',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any;
+
+    jest.spyOn(userModel, 'findByGoogleId').mockResolvedValueOnce(mockUser);
+
+    const result = await authService.signInWithGoogle('valid-token');
+
+    expect(result).toHaveProperty('token');
+    expect(result).toHaveProperty('user');
+    expect(result.user.email).toBe('existing@example.com');
+    expect(result.token).toBeTruthy();
   });
 });

@@ -12,6 +12,7 @@ import request from 'supertest';
 import express from 'express';
 import router from '../../../src/routes/routes';
 import { authService } from '../../../src/services/auth.service';
+import { userModel } from '../../../src/models/user.model';
 import mongoose from 'mongoose';
 import path from 'path';
 
@@ -226,5 +227,156 @@ describe('Mocked POST /api/auth/signup', () => {
     expect(response.body.data).toHaveProperty('user');
     expect(response.body.data.user).toHaveProperty('email', 'test@example.com');
     expect(authService.signUpWithGoogle).toHaveBeenCalledTimes(1);
+  });
+});
+
+// Direct AuthService Tests
+describe('AuthService.signUpWithGoogle - Service Level Tests', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    jest.restoreAllMocks();
+  });
+
+  // Service test: Invalid token payload (null payload)
+  // Input: Google token that returns null payload
+  // Expected behavior: Throws 'Invalid Google token' error
+  // Expected output: Error thrown
+  test('Throws error when Google token payload is null', async () => {
+    (
+      jest.spyOn(authService['googleClient'], 'verifyIdToken') as any
+    ).mockResolvedValueOnce({
+      getPayload: () => null,
+    });
+
+    await expect(authService.signUpWithGoogle('invalid-token')).rejects.toThrow(
+      'Invalid Google token'
+    );
+  });
+
+  // Service test: Missing email in payload
+  // Input: Google token with payload missing email
+  // Expected behavior: Throws 'Invalid Google token' error
+  // Expected output: Error thrown
+  test('Throws error when email is missing from Google payload', async () => {
+    (
+      jest.spyOn(authService['googleClient'], 'verifyIdToken') as any
+    ).mockResolvedValueOnce({
+      getPayload: () => ({
+        sub: 'google-123',
+        name: 'Test User',
+        // email is missing
+      }),
+    });
+
+    await expect(
+      authService.signUpWithGoogle('token-without-email')
+    ).rejects.toThrow('Invalid Google token');
+  });
+
+  // Service test: Missing name in payload
+  // Input: Google token with payload missing name
+  // Expected behavior: Throws 'Invalid Google token' error
+  // Expected output: Error thrown
+  test('Throws error when name is missing from Google payload', async () => {
+    (
+      jest.spyOn(authService['googleClient'], 'verifyIdToken') as any
+    ).mockResolvedValueOnce({
+      getPayload: () => ({
+        sub: 'google-123',
+        email: 'test@example.com',
+        // name is missing
+      }),
+    });
+
+    await expect(
+      authService.signUpWithGoogle('token-without-name')
+    ).rejects.toThrow('Invalid Google token');
+  });
+
+  // Service test: Google verifyIdToken throws error
+  // Input: Invalid token that Google rejects
+  // Expected behavior: Throws 'Invalid Google token' error
+  // Expected output: Error thrown
+  test('Throws error when Google verifyIdToken fails', async () => {
+    (
+      jest.spyOn(authService['googleClient'], 'verifyIdToken') as any
+    ).mockRejectedValueOnce(new Error('Token verification failed'));
+
+    await expect(authService.signUpWithGoogle('bad-token')).rejects.toThrow(
+      'Invalid Google token'
+    );
+  });
+
+  // Service test: User already exists during signup
+  // Input: Valid token for existing user
+  // Expected behavior: Throws 'User already exists' error
+  // Expected output: Error thrown
+  test('Throws error when user already exists', async () => {
+    (
+      jest.spyOn(authService['googleClient'], 'verifyIdToken') as any
+    ).mockResolvedValueOnce({
+      getPayload: () => ({
+        sub: 'google-existing',
+        email: 'existing@example.com',
+        name: 'Existing User',
+        picture: 'https://example.com/pic.jpg',
+      }),
+    });
+
+    // Mock userModel to return existing user
+    jest.spyOn(userModel, 'findByGoogleId').mockResolvedValueOnce({
+      _id: new mongoose.Types.ObjectId(),
+      googleId: 'google-existing',
+      email: 'existing@example.com',
+      name: 'Existing User',
+    } as any);
+
+    await expect(authService.signUpWithGoogle('valid-token')).rejects.toThrow(
+      'User already exists'
+    );
+  });
+
+  // Service test: Successful signup with valid token
+  // Input: Valid Google token for new user
+  // Expected behavior: Creates user and returns token
+  // Expected output: AuthResult with token and user
+  test('Successfully creates user with valid token', async () => {
+    (
+      jest.spyOn(authService['googleClient'], 'verifyIdToken') as any
+    ).mockResolvedValueOnce({
+      getPayload: () => ({
+        sub: 'google-new-user',
+        email: 'newuser@example.com',
+        name: 'New User',
+        picture: 'https://example.com/pic.jpg',
+      }),
+    } as any);
+
+    // Mock userModel to return null (user doesn't exist)
+    jest.spyOn(userModel, 'findByGoogleId').mockResolvedValueOnce(null);
+
+    // Mock userModel.create to return new user
+    const mockUser = {
+      _id: new mongoose.Types.ObjectId(),
+      googleId: 'google-new-user',
+      email: 'newuser@example.com',
+      name: 'New User',
+      friendCode: 'NEW123456',
+      profilePicture: 'https://example.com/pic.jpg',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any;
+
+    jest.spyOn(userModel, 'create').mockResolvedValueOnce(mockUser);
+
+    const result = await authService.signUpWithGoogle('valid-token');
+
+    expect(result).toHaveProperty('token');
+    expect(result).toHaveProperty('user');
+    expect(result.user.email).toBe('newuser@example.com');
+    expect(result.token).toBeTruthy();
   });
 });

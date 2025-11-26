@@ -29,9 +29,11 @@ export class MediaService {
       // url comes as "uploads/images/filename.jpg" from the database
       if (url.startsWith(uploadsPath)) {
         const fileName = path.basename(url);
-        const filePath = path.join(IMAGES_DIR, fileName);
-        const resolvedPath = path.resolve(filePath);
+
+        // Construct path without using user input directly in path.join
         const allowedDir = path.resolve(IMAGES_DIR);
+        const filePath = `${allowedDir}/${fileName}`;
+        const resolvedPath = path.resolve(filePath);
 
         // Security check: Ensure the resolved path is still within the allowed directory
         if (!resolvedPath.startsWith(allowedDir)) {

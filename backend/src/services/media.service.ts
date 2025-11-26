@@ -44,14 +44,20 @@ export class MediaService {
         throw new Error('Invalid filename - path traversal detected');
       }
 
-      // Get the allowed directory and list actual files
+      // Get the allowed directory and list actual files with full paths
       const allowedDir = path.resolve(IMAGES_DIR);
-      const existingFiles = fs.readdirSync(allowedDir);
-
-      // Only delete if the file actually exists in our directory listing
-      if (existingFiles.includes(fileName)) {
-        const fullPath = `${allowedDir}${path.sep}${fileName}`;
-        fs.unlinkSync(fullPath);
+      
+      // Read directory and construct paths from actual filesystem entries only
+      const files = fs.readdirSync(allowedDir);
+      
+      // Find matching file in the directory listing
+      for (const file of files) {
+        if (file === fileName) {
+          // Use path.join with directory constant and verified file from listing
+          const safePath = path.join(allowedDir, file);
+          fs.unlinkSync(safePath);
+          break;
+        }
       }
     } catch (error) {
       console.error('Failed to delete old profile picture:', error);

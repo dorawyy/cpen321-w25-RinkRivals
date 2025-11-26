@@ -97,7 +97,9 @@ class NhlDataManagerImpl @Inject constructor(
     override fun getUpcomingGames(): List<Game> {
         return _uiState.value.gameSchedule?.flatMap { gameWeek ->
             gameWeek.games.filter { game ->
-                game.gameState == "FUT" // Future games only
+                game.gameState == "FUT" // Future games
+                game.gameState == "PRE" // Pre-game
+
             }
         } ?: emptyList()
     }

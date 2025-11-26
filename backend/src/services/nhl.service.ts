@@ -156,7 +156,7 @@ export class NHLService {
    * Check if game is currently live/in progress
    */
   private isGameLive(gameState: string): boolean {
-    const liveStates = ['LIVE', 'CRIT', 'PRE']; // PRE = pregame, might want to treat as live
+    const liveStates = ['LIVE', 'CRIT'];
     return liveStates.includes(gameState.toUpperCase());
   }
 
@@ -172,7 +172,7 @@ export class NHLService {
    * Check if game is scheduled (future)
    */
   private isGameScheduled(gameState: string): boolean {
-    const scheduledStates = ['FUT', 'SCHEDULED'];
+    const scheduledStates = ['FUT', 'SCHEDULED', 'PRE'];
     return scheduledStates.includes(gameState.toUpperCase());
   }
 

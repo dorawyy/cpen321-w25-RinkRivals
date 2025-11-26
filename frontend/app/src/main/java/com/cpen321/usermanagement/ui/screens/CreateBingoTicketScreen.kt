@@ -27,6 +27,7 @@ import com.cpen321.usermanagement.ui.components.Icon
 import com.cpen321.usermanagement.ui.components.TeamMatchup
 import com.cpen321.usermanagement.ui.viewmodels.AuthViewModelContract
 import com.cpen321.usermanagement.ui.viewmodels.TicketsViewModel
+import com.cpen321.usermanagement.utils.FormatUtils.formatDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

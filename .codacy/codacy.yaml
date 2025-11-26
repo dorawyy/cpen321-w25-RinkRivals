@@ -1,3 +1,9 @@
+exclude-paths:
+    - backend/node_modules/**
+    - frontend/app/build/**
+    - frontend/app/src/androidTest/**
+    - android/app/build/**
+    - backend/tests/**
 runtimes:
     - dart@3.7.2
     - go@1.22.3

@@ -28,11 +28,11 @@ import com.cpen321.usermanagement.R
 import com.cpen321.usermanagement.data.remote.dto.BingoTicket
 import com.cpen321.usermanagement.data.remote.dto.CreateChallengeRequest
 import com.cpen321.usermanagement.data.remote.dto.Game
+import com.cpen321.usermanagement.ui.components.ProfileImage
 import com.cpen321.usermanagement.ui.components.TeamMatchup
 import com.cpen321.usermanagement.ui.viewmodels.ChallengesViewModel
 import com.cpen321.usermanagement.ui.viewmodels.Friend
-import java.text.SimpleDateFormat
-import java.util.*
+import com.cpen321.usermanagement.utils.FormatUtils.formatDateTime
 
 
 
@@ -688,10 +688,9 @@ private fun FriendItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            ProfileImage(
+                profilePicture = friend.profilePicture,
+                size = 40.dp
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -711,15 +710,5 @@ private fun FriendItem(
     }
 }
 
-fun formatDateTime(dateTimeString: String): String {
-    return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
-        val outputFormat = SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault())
-        val date = inputFormat.parse(dateTimeString)
-        outputFormat.format(date ?: Date())
-    } catch (e: Exception) {
-        Log.e("formatDateTime", "Error formatting date/time: ${e.message}")
-        dateTimeString // Return original string if parsing fails
-    }
-}
+
 

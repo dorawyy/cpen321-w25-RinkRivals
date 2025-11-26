@@ -192,8 +192,8 @@ describe('MediaService Direct Tests', () => {
 
     expect(fs.existsSync(testFilePath)).toBe(true);
 
-    // Delete using MediaService - use IMAGES_DIR format
-    await MediaService.deleteImage(`../uploads/images/${testFileName}`);
+    // Delete using MediaService - use database path format (no leading slash)
+    await MediaService.deleteImage(`uploads/images/${testFileName}`);
 
     expect(fs.existsSync(testFilePath)).toBe(false);
   });
@@ -204,7 +204,7 @@ describe('MediaService Direct Tests', () => {
   // Expected output: No error thrown
   test('deleteImage handles non-existent file gracefully', async () => {
     await expect(
-      MediaService.deleteImage('../uploads/images/nonexistent.jpg')
+      MediaService.deleteImage('uploads/images/nonexistent.jpg')
     ).resolves.not.toThrow();
   });
 
@@ -299,7 +299,7 @@ describe('MediaService Direct Tests', () => {
       fs.mkdirSync(testDirPath);
 
       // Try to delete it as if it were a file - this might cause issues
-      await MediaService.deleteImage(`../uploads/images/${testDirName}`);
+      await MediaService.deleteImage(`uploads/images/${testDirName}`);
     } finally {
       // Clean up
       if (fs.existsSync(testDirPath)) {

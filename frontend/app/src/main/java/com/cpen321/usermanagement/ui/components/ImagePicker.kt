@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -110,7 +111,7 @@ private fun rememberGalleryLauncher(
     onImageSelected: (Uri) -> Unit,
     onDismiss: () -> Unit
 ) = rememberLauncherForActivityResult(
-    contract = ActivityResultContracts.GetContent()
+    contract = ActivityResultContracts.PickVisualMedia()
 ) { uri ->
     uri?.let { onImageSelected(it) }
     onDismiss()
@@ -144,14 +145,14 @@ private fun rememberCameraPermissionLauncher(
 
 @Composable
 private fun rememberStoragePermissionLauncher(
-    galleryLauncher: androidx.activity.result.ActivityResultLauncher<String>,
+    galleryLauncher: androidx.activity.result.ActivityResultLauncher<PickVisualMediaRequest>,
     onPermissionGranted: (Boolean) -> Unit
 ) = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.RequestPermission()
 ) { isGranted ->
     onPermissionGranted(isGranted)
     if (isGranted) {
-        galleryLauncher.launch("image/*")
+        galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
 }
 
@@ -257,19 +258,19 @@ private fun handleCameraClick(
 
 private fun handleGalleryClick(
     hasStoragePermission: Boolean,
-    galleryLauncher: androidx.activity.result.ActivityResultLauncher<String>,
+    galleryLauncher: androidx.activity.result.ActivityResultLauncher<PickVisualMediaRequest>,
     permissionLauncher: androidx.activity.result.ActivityResultLauncher<String>
 ) {
-    if (hasStoragePermission) {
-        galleryLauncher.launch("image/*")
+    // Photo Picker doesn't require permissions on Android 13+ (API 33+)
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        // Use modern Photo Picker (no permission needed)
+        galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    } else if (hasStoragePermission) {
+        // Fallback for older Android versions with permission
+        galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     } else {
-        val permission =
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                Manifest.permission.READ_MEDIA_IMAGES
-            } else {
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            }
-        permissionLauncher.launch(permission)
+        // Request permission for older Android versions
+        permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
     }
 }
 

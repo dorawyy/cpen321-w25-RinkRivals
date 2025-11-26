@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cpen321.usermanagement.R
+import com.cpen321.usermanagement.ui.components.ProfileImage
 import com.cpen321.usermanagement.ui.viewmodels.AuthViewModelContract
 import com.cpen321.usermanagement.ui.viewmodels.FriendsViewModel
 import kotlinx.coroutines.launch
@@ -154,7 +155,17 @@ fun FriendsScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(req.sender.name)
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                ProfileImage(
+                                    profilePicture = req.sender.profilePicture,
+                                    size = 40.dp
+                                )
+                                Text(req.sender.name)
+                            }
                             Row {
                                 TextButton(onClick = { viewModel.acceptFriendRequest(req._id) }) { Text(stringResource(R.string.accept)) }
                                 TextButton(onClick = { viewModel.rejectFriendRequest(req._id) }) { Text(stringResource(R.string.reject)) }
@@ -185,7 +196,17 @@ fun FriendsScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(friend.name)
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                ProfileImage(
+                                    profilePicture = friend.profilePicture,
+                                    size = 40.dp
+                                )
+                                Text(friend.name)
+                            }
                             TextButton(onClick = { viewModel.removeFriend(friend.id) }) { Text(stringResource(R.string.remove)) }
                         }
                         HorizontalDivider(

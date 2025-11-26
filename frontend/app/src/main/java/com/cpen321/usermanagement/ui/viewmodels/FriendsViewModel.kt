@@ -14,7 +14,8 @@ import javax.inject.Inject
 
 data class Friend(
     val id: String,
-    val name: String
+    val name: String,
+    val profilePicture: String? = null
 )
 
 /**

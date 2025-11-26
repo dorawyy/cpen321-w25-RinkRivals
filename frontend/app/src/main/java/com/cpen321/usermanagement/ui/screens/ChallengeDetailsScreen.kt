@@ -17,21 +17,26 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.cpen321.usermanagement.R
 import com.cpen321.usermanagement.data.local.preferences.NhlDataManager
 import com.cpen321.usermanagement.data.local.preferences.SocketEventListener
 import com.cpen321.usermanagement.data.local.preferences.SocketManager
+import com.cpen321.usermanagement.data.remote.api.RetrofitClient
 import com.cpen321.usermanagement.data.remote.dto.BingoTicket
 import com.cpen321.usermanagement.data.remote.dto.Challenge
 import com.cpen321.usermanagement.data.remote.dto.ChallengeStatus
 import com.cpen321.usermanagement.data.remote.dto.User
 import com.cpen321.usermanagement.ui.components.BingoTicketCard
 import com.cpen321.usermanagement.ui.components.GameCard
+import com.cpen321.usermanagement.ui.components.ProfileImage
 import com.cpen321.usermanagement.ui.viewmodels.ChallengesViewModel
 import com.cpen321.usermanagement.ui.viewmodels.Friend
 
@@ -488,6 +493,12 @@ private fun MembersSection(
                             user?._id -> user.name
                             else -> allFriends.find { it.id == memberId }?.name ?: memberId
                         }
+                        
+                        val memberProfilePicture = when (memberId) {
+                            challenge.ownerId -> allFriends.find { it.id == memberId }?.profilePicture ?: user?.profilePicture
+                            user?._id -> user.profilePicture
+                            else -> allFriends.find { it.id == memberId }?.profilePicture
+                        }
 
                         // Get the ticket ID for this member
                         val ticketId = challenge.ticketIds[memberId]
@@ -496,6 +507,7 @@ private fun MembersSection(
 
                         MemberRowWithTicket(
                             name = memberName,
+                            profilePicture = memberProfilePicture,
                             isOwner = memberId == challenge.ownerId,
                             isYou = memberId == user?._id,
                             ticket = memberTicket,
@@ -586,6 +598,7 @@ private fun InvitedUsersSection(
 @Composable
 private fun MemberRowWithTicket(
     name: String,
+    profilePicture: String?,
     isOwner: Boolean,
     isYou: Boolean,
     ticket: BingoTicket?,
@@ -612,28 +625,15 @@ private fun MemberRowWithTicket(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Surface(
-                    shape = CircleShape,
-                    color = if (isOwner) 
+                // Profile picture
+                ProfileImage(
+                    profilePicture = profilePicture,
+                    size = 40.dp,
+                    backgroundColor = if (isOwner) 
                         MaterialTheme.colorScheme.primaryContainer 
                     else 
-                        MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            tint = if (isOwner) 
-                                MaterialTheme.colorScheme.onPrimaryContainer 
-                            else 
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+                        MaterialTheme.colorScheme.surfaceVariant
+                )
 
                 Column(modifier = Modifier.weight(1f)) {
                     Row(

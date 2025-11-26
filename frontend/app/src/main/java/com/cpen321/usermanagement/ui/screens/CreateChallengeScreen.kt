@@ -28,6 +28,7 @@ import com.cpen321.usermanagement.R
 import com.cpen321.usermanagement.data.remote.dto.BingoTicket
 import com.cpen321.usermanagement.data.remote.dto.CreateChallengeRequest
 import com.cpen321.usermanagement.data.remote.dto.Game
+import com.cpen321.usermanagement.ui.components.ProfileImage
 import com.cpen321.usermanagement.ui.components.TeamMatchup
 import com.cpen321.usermanagement.ui.viewmodels.ChallengesViewModel
 import com.cpen321.usermanagement.ui.viewmodels.Friend
@@ -687,10 +688,9 @@ private fun FriendItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            ProfileImage(
+                profilePicture = friend.profilePicture,
+                size = 40.dp
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(

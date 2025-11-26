@@ -1,8 +1,13 @@
 import mongoose, { Document } from 'mongoose';
 import z from 'zod';
+import path from 'path';
 
-// Use relative path for uploads directory
-export const IMAGES_DIR = '../uploads/images';
+// Use environment variable for uploads directory with fallback
+// This ensures images are saved in backend/uploads/images regardless of where the server runs from
+export const IMAGES_DIR = path.join(
+  process.cwd(),
+  process.env.UPLOADS_DIR || 'uploads/images'
+);
 
 // User model
 // ------------------------------------------------------------

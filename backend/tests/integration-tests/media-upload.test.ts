@@ -93,10 +93,7 @@ describe('Media Upload Integration Tests', () => {
   // Expected behavior: Returns 401 unauthorized
   // Expected output: 401 status
   test('Returns 401 when not authenticated', async () => {
-    const testImagePath = path.join(
-      __dirname,
-      '../../test-fixtures/test-image.jpg'
-    );
+    const testImagePath = path.join(__dirname, '../res/test-image.jpg');
 
     // Create a test image if it doesn't exist
     if (!fs.existsSync(path.dirname(testImagePath))) {
@@ -118,10 +115,7 @@ describe('Media Upload Integration Tests', () => {
   // Expected behavior: Saves image and returns URL
   // Expected output: 200 status with image URL
   test('Successfully uploads image with valid file', async () => {
-    const testImagePath = path.join(
-      __dirname,
-      '../../test-fixtures/test-upload.jpg'
-    );
+    const testImagePath = path.join(__dirname, '../res/test-upload.jpg');
 
     // Create a test image
     if (!fs.existsSync(path.dirname(testImagePath))) {

@@ -21,7 +21,8 @@
 | 9. Nov          | 3.1, 3.4, 3.5                | Updated challenge requirements to reflect what is in our app                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | 26. Nov         | 3.1, Manage challenges       | Updated feature description to reflect our app                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | 26. Nov         | 3.3                          | Added actors to the actors list.                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| 26. Nov         | 3.3, 3.4                     | Removed the view challenges feature as it was vague and really a part of manage challenges. Edited the use case diagram                                                                                                                                                                                                                                                                                                                                                                                 |
+| 26. Nov         | 3.3, 3.4                     | Removed the view challenges feature as it was vague and really a part of manage challenges. Edited the use case diagram |
+|26. Nov      |  3.5                        | Revised the formal use case specifications to follow a proper user/system sequence. Changed "accept challenge" use case to "Join challenge" as changed in 3.3 and 3.4  |
 
 ---
 
@@ -94,102 +95,87 @@ Our app is a social points game based on real life ice hockey games. The purpose
 
 #### Use Case 1: [Creating a Bingo Ticket]
 
-**Description**: A user chooses 9 events for an upcoming NHL game from a given list and places them in a 3×3 bingo ticket. When they have finished creating the ticket, the user can assign it a name.
+**Description**: A user chooses 9 events for an upcoming NHL game from a given list and places them in a 3×3 grid creating a bingo ticket.
 
 **Primary actor(s)**: User
 
 **Main success scenario**:
 
-1. The user assigns a name to the bingo ticket.
-2. The user selects an upcoming hockey game.
-3. The system displays a list of events to choose from (30) based on the specific game.
-4. The user selects 9 events based on the game and places them in the 3×3 grid.
-5. The user creates the ticket.
-6. The system confirms the ticket has been created.
+1. The user assigns a name to the bingo ticket and selects an upcoming hockey game.
+2. The system displays a 3x3 grid for the user to fill in.
+3. The user clicks on one of the 9 boxes.
+4. The system shows a list of events to choose from (40) based on the specific game.
+5. The user selects an event.
+6. The user repeats step 3-5 nine times.
+7. The system allows the user to create the ticket.
+8. The user creates the ticket.
+9. The system shows the ticket in the list of tickets.
 
 **Failure scenario(s)**:
 
-- 1a. The ticket name exceeds the character limit.
-
-  - 1a1. The system displays an error message telling the user to remain within the character limit.
-
 - 2a. No upcoming hockey games are available.
-
   - 2a1. The system displays an error message saying there are no upcoming games.
 
-- 5a. The hockey game has begun while naming the ticket.
-  - 5a1. The system displays an error message saying the game has already begun.
-  - 5a2. The user is returned to the main menu.
 
-...
 
 <a name="uc2"></a>
 
-#### Use Case 2: [Send Challenge]
+#### Use Case 2: [Create Challenge]
 
-**Description**: A user creates a challenge for an upcoming hockey game and invites friends to participate.
+**Description**: A user creates a challenge for an upcoming hockey game.
 
 **Primary actor(s)**: User
 
 **Main success scenario**:
 
-1. The user selects a game that they want to make a challenge on
-2. The user selects a bingo ticket that is made on the same game.
-3. The user selects one or more friends to invite.
-4. The user creates the challenge invitation.
-5. The system notifies the invited friends of the challenge.
+1. The user selects a game that they want to make a challenge on.
+2. The system allows the user to choose a ticket.
+3. The user selects a bingo ticket that is made on the same game.
+4. The system provides a default title to the challenge based on the game.
+5. The user selects one or more friends to invite.
+6. The system allows the user to create challenge.
+7. The user creates the challenge.
+8. The system notifies the invited friends of the challenge and shows the challenge in the list of pending challenges.
 
 **Failure scenario(s)**:
 
-- 3b. The owner has no friends in their list.
+- 6a. No friends, no game or no ticket is selected.
+  - 6a1. The system displays an error message requiring at least one friend, a game and a ticket.
 
-  - 3b1. The system displays an error message saying a challenge cannot be created without friends.
+#### Use Case 3: [Join Challenge]
 
-- 4a. No friends, no game or no ticket is selected.
-
-  - 4a1. The system displays an error message requiring at least one friend, a game and a ticket.
-
-- 4b. The hockey game has already begun while creating the challenge.
-  - 4b1. The system displays an error message saying the game has already begun.
-
-#### Use Case 3: [Accept Challenge]
-
-**Description**: A user is prompted with an invitation to join a group challenge. They can accept by selecting or a bingo ticket for the specified game.
+**Description**: A user receives invitation to join a challenge. They can accept by selecting a bingo ticket for the specified game.
 
 **Primary actor(s)**: User
 
 **Main success scenario**:
 
-1. The user views the pending challenge invitation.
-2. The user chooses to accept the invitation.
-3. The user selects an existing bingo ticket for the specified game.
-4. The system adds the user to the challenge and confirms acceptance.
+1. The user views the details of a pending challenge.
+2. The system shows the details of challenge and prompts the user to decline or select a bingo ticket their own to join the challenge.
+3. The user selects an existing bingo ticket for the specified game and joins the challenge.
+4. The system moves the user from the list of invited users to the list of challenge partcipants.
 
 **Failure scenario(s)**:
 
-- 2a. The hockey game has already begun while accepting the invitation.
+- 2a. The user does not have any bingo tickets for the specified game
+  - 2a1. The system prompts the user to create a bingo ticket for the specified game.
+  - 2a2. The user creates a bingo ticket for the specified game.
+  - 2a3. The user tries to join the challenge again.
 
-  - 2a1. The system displays an error message saying the game has already begun.
+#### Use Case 4: [View challenge details]
 
-  - 2a2. The user is returned to the main menu.
-
-- 4a. The hockey game has already begun while submitting a bingo ticket.
-
-  - 4a1. The system displays an error message saying the game has already begun.
-
-  - 4a2. The user is returned to the main menu.
-
-#### Use Case 4: [View challenge tickets]
-
-**Description**: A user selects an ongoing challenge and can view all the participating bingo tickets to see who predicted the most events right.
+**Description**: A user selects a challenge and views all the participatnts and their bingo tickets to see who predicted the most events.
 
 **Primary actor(s)**: User
 
 **Main success scenario**:
 
-1. The user navigates to their list of current challenges.
-2. The user selects a specific live challenge.
-3. The system displays a list of all participating bingo tickets.
+1. The user clicks a challenge.
+2. The system displays the challenge details with title, game state, participants and their bingo tickets automatically filled out based on the real game.
+**Failure scenario(s)**:
+
+- 2a. One of the participants has deleted their account.
+  - 2a1. The system displays "User deleted" instead of the name of the participant.
 
 #### Use Case 5: [Send friend request]
 
@@ -200,22 +186,20 @@ Our app is a social points game based on real life ice hockey games. The purpose
 **Main success scenario**:
 
 1. The user navigates to their list of current friends.
-2. The user types the friendCode of the friend in a form.
-3. The user clicks an icon to add a new friend.
+2. The system displays a list of their friends and the friend code needed to be found as a friend.
+3. The user types the friendCode of another user in a form and clicks to add friend.
 4. The system notifies the user that the request has been successfully sent.
 
 **Failure scenario(s)**:
 
-- 2a. The user enters an invalid friendCode
+- 3a. The user enters an invalid friendCode
+  - 3a1. The system displays a message: “Please enter a valid friend code.”
 
-  - 2a1. The system displays a message: “Please enter a valid friend code.”
+- 3b. There is no user associated with the friendCode.
+  - 3b1. The system notifies the user that no user is associated with that email.
 
-- 4a. There is no user associated with the friendCode.
-
-  - 4a1. The system notifies the user that no user is associated with that email.
-
-- 4b. The user associated with the email is already a friend.
-  - 4b1. The system notifies the user that the accounts are already friends.
+- 3c. The user associated with the email is already a friend.
+  - 3c1. The system notifies the user that the accounts are already friends.
 
 ### **3.6. Screen Mock-ups**
 

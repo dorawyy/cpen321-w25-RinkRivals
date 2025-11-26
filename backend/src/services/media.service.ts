@@ -27,28 +27,31 @@ export class MediaService {
     try {
       const uploadsPath = process.env.UPLOADS_DIR || 'uploads/images';
       // url comes as "uploads/images/filename.jpg" from the database
-      if (url.startsWith(uploadsPath)) {
-        const fileName = path.basename(url);
-        
-        // Security: validate filename only contains safe characters (alphanumeric, dash, underscore, dot)
-        const safeFilenamePattern = /^[a-zA-Z0-9_\-\.]+$/;
-        if (!safeFilenamePattern.test(fileName)) {
-          throw new Error('Invalid filename - contains unsafe characters');
-        }
-        
-        // Additional check: ensure no path traversal sequences
-        if (fileName.includes('..')) {
-          throw new Error('Invalid filename - path traversal detected');
-        }
-        
-        // Construct file path using only validated filename
-        const allowedDir = path.resolve(IMAGES_DIR);
-        const fullPath = `${allowedDir}${path.sep}${fileName}`;
+      if (!url.startsWith(uploadsPath)) {
+        return;
+      }
 
-        // Verify the file actually exists in our directory
-        if (fs.existsSync(fullPath)) {
-          fs.unlinkSync(fullPath);
-        }
+      const fileName = path.basename(url);
+
+      // Security: validate filename only contains safe characters (alphanumeric, dash, underscore, dot)
+      const safeFilenamePattern = /^[a-zA-Z0-9_\-\.]+$/;
+      if (!safeFilenamePattern.test(fileName)) {
+        throw new Error('Invalid filename - contains unsafe characters');
+      }
+
+      // Additional check: ensure no path traversal sequences
+      if (fileName.includes('..')) {
+        throw new Error('Invalid filename - path traversal detected');
+      }
+
+      // Get the allowed directory and list actual files
+      const allowedDir = path.resolve(IMAGES_DIR);
+      const existingFiles = fs.readdirSync(allowedDir);
+
+      // Only delete if the file actually exists in our directory listing
+      if (existingFiles.includes(fileName)) {
+        const fullPath = `${allowedDir}${path.sep}${fileName}`;
+        fs.unlinkSync(fullPath);
       }
     } catch (error) {
       console.error('Failed to delete old profile picture:', error);

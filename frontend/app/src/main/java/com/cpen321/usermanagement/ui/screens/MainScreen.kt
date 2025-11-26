@@ -266,7 +266,6 @@ private fun HeroBanner(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .padding(horizontal = 100.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = stringResource(R.string.app_name),

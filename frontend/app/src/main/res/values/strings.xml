@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">NHL predictions</string>
+    <string name="app_name">Rink Rivals</string>
     <string name="auth_message">Please sign in to continue.</string>
     <string name="welcome">Welcome!</string>
     <string name="put_your_knowledge_to_the_test">Put your hockey knowledge to the test against your friends</string>

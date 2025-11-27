@@ -247,6 +247,10 @@ Our app is a social points game based on real life ice hockey games. The purpose
           - **Parameters**: `Authorization: Bearer {token}`
           - **Returns**: `{ message: String }`
           - **Purpose**: Permanently deletes the authenticated user's account and all associated data.
+        - `POST /api/media/upload`
+          - **Parameters**: `Authorization: Bearer {token}, media: Image`
+          - **Returns**: `{ image: String }`
+          - **Purpose**: Uploads the profile picture to the backend.
      2. **Java-style Interfaces** (Backend Internal):
         - `create(userInfo: GoogleUserInfo): User`
           - **Purpose**: Creates a user document in database with ID.

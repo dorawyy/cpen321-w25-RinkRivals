@@ -75,7 +75,9 @@ object RetrofitClient {
 
     fun getPictureUri(picturePath: String): String {
         return if (picturePath.startsWith("uploads/")) {
-            IMAGE_BASE_URL + picturePath
+            // Remove trailing slash from IMAGE_BASE_URL if present, then add path
+            val baseUrl = IMAGE_BASE_URL.trimEnd('/')
+            "$baseUrl/$picturePath"
         } else {
             picturePath
         }

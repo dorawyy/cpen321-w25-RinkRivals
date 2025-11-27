@@ -18,10 +18,15 @@ class FriendsRepositoryImpl @Inject constructor(
                 val sender = friendEntry.sender
                 val receiver = friendEntry.receiver
 
+                // Skip if receiver is null (deleted account)
+                if (receiver == null) {
+                    return@mapNotNull null
+                }
+
                 // Pick the other person in the friendship
                 val friendUser = if (sender._id == currentUserId) receiver else sender
 
-                Friend(friendUser._id, friendUser.name)
+                Friend(friendUser._id, friendUser.name, friendUser.profilePicture)
             } ?: emptyList()
 
             Result.success(data)

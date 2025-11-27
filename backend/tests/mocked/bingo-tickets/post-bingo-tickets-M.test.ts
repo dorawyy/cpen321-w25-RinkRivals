@@ -4,6 +4,7 @@ import {
   test,
   jest,
   beforeAll,
+  beforeEach,
   afterAll,
 } from '@jest/globals';
 import dotenv from 'dotenv';
@@ -54,6 +55,10 @@ describe('Mocked POST /api/tickets', () => {
     });
   });
 
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   // Restore mocks after tests
   afterAll(() => {
     jest.restoreAllMocks();
@@ -83,13 +88,6 @@ describe('Mocked POST /api/tickets', () => {
       name: 'Mock Ticket',
       game: { id: 1, homeTeam: { abbrev: 'HT' }, awayTeam: { abbrev: 'AT' } },
       events: events as EventCondition[],
-      score: {
-        noCrossedOff: 0,
-        noRows: 0,
-        noColumns: 0,
-        noCrosses: 0,
-        total: 0,
-      },
     };
 
     // Act
@@ -102,5 +100,46 @@ describe('Mocked POST /api/tickets', () => {
     expect(res.status).toBe(500);
     expect(Ticket.create).toHaveBeenCalledTimes(1);
     expect(res.body).toHaveProperty('message', 'Server error');
+  });
+
+  // Mocked behavior: Non-ZodError exception in validation middleware (covers validation.middleware.ts line 23)
+  // Input: Mock schema.parse to throw non-ZodError by spying on createTicketSchema
+  // Expected behavior: Returns 500 with generic error
+  // Expected output: 500 status with validation processing failed message
+  test('Returns 500 when non-ZodError exception occurs in validation', async () => {
+    const ticketsTypes = require('../../../src/types/tickets.types');
+
+    // Spy on createTicketSchema parse and throw a non-ZodError
+    const mockParse = jest
+      .spyOn(ticketsTypes.createTicketSchema, 'parse')
+      .mockImplementationOnce(() => {
+        throw new TypeError('Unexpected validation error');
+      });
+
+    const events: EventCondition[] = Array(9).fill({
+      id: '1',
+      category: 'GOAL',
+      subject: 'test',
+      comparison: 'GREATER_THAN',
+      threshold: 0,
+    });
+
+    const validTicket: TicketType = {
+      userId: testUserId,
+      name: 'Mock Ticket',
+      game: { id: 1, homeTeam: { abbrev: 'HT' }, awayTeam: { abbrev: 'AT' } },
+      events: events,
+    };
+
+    const res = await request(app)
+      .post('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send(validTicket);
+
+    expect(res.status).toBe(500);
+    expect(res.body).toHaveProperty('error', 'Internal server error');
+    expect(res.body).toHaveProperty('message', 'Validation processing failed');
+
+    mockParse.mockRestore();
   });
 });

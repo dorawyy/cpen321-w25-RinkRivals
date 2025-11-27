@@ -20,7 +20,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           source: "backend/*"
           target: "/home/ubuntu/hockey_app/"
-          rm: true  # Remove target directory before copying
+          rm: true # Remove target directory before copying
 
       - name: Rebuild and Deploy
         uses: appleboy/ssh-action@master
@@ -36,6 +36,7 @@ jobs:
             JWT_SECRET=${{ secrets.PROD_JWT_SECRET }}
             MONGODB_URI=${{ secrets.PROD_DB_URI }}
             GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            UPLOADS_DIR=uploads/images
 
             EOF
 

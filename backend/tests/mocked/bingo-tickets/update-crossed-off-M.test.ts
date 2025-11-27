@@ -106,4 +106,29 @@ describe('Mocked PUT /api/tickets/crossedOff/:id', () => {
     );
     expect(res.body).toHaveProperty('error');
   });
+
+  // Test: computeTicketScore handles non-array input (covers score.util.ts line 22)
+  // Input: Non-array value passed to computeTicketScore
+  // Expected behavior: normalizeCrossedOff returns array of false
+  // Expected output: Score computed with all false values
+  test('computeTicketScore handles non-array input gracefully', () => {
+    const { computeTicketScore } = require('../../../src/utils/score.util');
+
+    // Pass non-array inputs to trigger the !Array.isArray check
+    const result1 = computeTicketScore(null as any);
+    expect(result1.noCrossedOff).toBe(0);
+    expect(result1.total).toBe(0);
+
+    const result2 = computeTicketScore(undefined as any);
+    expect(result2.noCrossedOff).toBe(0);
+    expect(result2.total).toBe(0);
+
+    const result3 = computeTicketScore('not-an-array' as any);
+    expect(result3.noCrossedOff).toBe(0);
+    expect(result3.total).toBe(0);
+
+    const result4 = computeTicketScore({ invalid: 'object' } as any);
+    expect(result4.noCrossedOff).toBe(0);
+    expect(result4.total).toBe(0);
+  });
 });

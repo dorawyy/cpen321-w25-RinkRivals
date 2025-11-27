@@ -16,6 +16,7 @@ import org.junit.Rule
 import org.junit.Test
 import java.lang.Thread.sleep
 
+//Log in to EMAIL_1 and EMAIL_2 using password "rinkrivals321" if necessary
 @HiltAndroidTest
 class E2ETests {
 

@@ -99,10 +99,13 @@ fun CreateChallengeScreen(
     
     // Validation
     val canCreateChallenge = selectedGame != null && 
-                           selectedTicket != null && 
+                           selectedTicket != null &&
+            selectedFriends.isNotEmpty() &&
                            challengeTitle.isNotBlank() &&
                            maxMembers.toIntOrNull() != null &&
-                           maxMembers.toInt() >= 2
+                           maxMembers.toInt() >= 2 &&
+                            selectedFriends.size + 1 <= maxMembers.toInt()
+
 
     Column(
         modifier = Modifier
@@ -208,7 +211,7 @@ fun CreateChallengeScreen(
                     )
                 ) {
                     Text(
-                        text = "Please complete all required fields:\n• Select a game\n• Select a bingo ticket\n• Enter challenge title\n• Set max members (≥2)",
+                        text = "Please complete all required fields:\n• Select a game\n• Select a bingo ticket\n• Select at least one friend\n• Enter challenge title\n• Set max members (≥2)",
                         modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onErrorContainer

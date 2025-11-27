@@ -15,6 +15,8 @@ import com.cpen321.usermanagement.ui.navigation.NavRoutes
 import com.cpen321.usermanagement.ui.viewmodels.NavigationViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 
 @Composable
 fun BottomNavigationBar(
@@ -25,7 +27,9 @@ fun BottomNavigationBar(
     val currentRoute = navState.currentRoute
 
     NavigationBar {
+
         NavigationBarItem(
+            modifier = Modifier.semantics { testTag = "nav_tickets" },
             selected = currentRoute == NavRoutes.TICKETS,
             onClick = { navManager.navigateToTickets() },
             icon = {
@@ -39,6 +43,7 @@ fun BottomNavigationBar(
         )
 
         NavigationBarItem(
+            modifier = Modifier.semantics { testTag = "nav_challenges" },
             selected = currentRoute == NavRoutes.CHALLENGES,
             onClick = { navManager.navigateToChallenges() },
             icon = {
@@ -51,8 +56,8 @@ fun BottomNavigationBar(
             label = { Text(stringResource(R.string.challenges)) }
         )
 
-        // Home (center)
         NavigationBarItem(
+            modifier = Modifier.semantics { testTag = "nav_home" },
             selected = currentRoute == NavRoutes.MAIN,
             onClick = { navManager.navigateToMain() },
             icon = {
@@ -66,6 +71,7 @@ fun BottomNavigationBar(
         )
 
         NavigationBarItem(
+            modifier = Modifier.semantics { testTag = "nav_friends" },
             selected = currentRoute == NavRoutes.FRIENDS,
             onClick = { navManager.navigateToFriends() },
             icon = {
@@ -79,6 +85,7 @@ fun BottomNavigationBar(
         )
 
         NavigationBarItem(
+            modifier = Modifier.semantics { testTag = "nav_profile" },
             selected = currentRoute == NavRoutes.PROFILE,
             onClick = { navManager.navigateToProfile() },
             icon = {

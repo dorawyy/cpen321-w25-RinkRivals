@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -294,7 +295,8 @@ private fun CollapsibleTicketsSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onToggle() }
-                .padding(vertical = 8.dp),
+                .padding(vertical = 8.dp)
+                .testTag("tickets_section_header_${gameState.lowercase()}"),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -323,6 +325,7 @@ private fun CollapsibleTicketsSection(
                     // Your BingoTicketCard composable goes here
                     BingoTicketCard(
                         ticket = ticket,
+                        modifier = Modifier.testTag("ticket_card_${ticket._id}"),
                         nhlDataManager = ticketsViewModel.nhlDataManager,
                         onClick = { ticketsViewModel.selectTicket(ticket._id) },
                         onDelete = {
@@ -365,7 +368,7 @@ private fun EmptyState(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onActionClick) {
+        Button(onClick = onActionClick, modifier = Modifier.testTag("emptyAddTicketButton")) {
             Text(text = actionText)
         }
     }
@@ -378,7 +381,8 @@ private fun AddTicketButton(
     Button(
         onClick = onClick,
         modifier = modifier
-            .height(56.dp), // Set a fixed height for a larger touch target
+            .height(56.dp) // Set a fixed height for a larger touch target
+            .testTag("addTicketButton"),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
         contentPadding = PaddingValues(
             start = 24.dp,

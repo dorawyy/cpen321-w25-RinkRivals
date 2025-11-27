@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -106,7 +107,7 @@ private fun AuthContent(
     modifier: Modifier = Modifier
 ) {
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.testTag("auth_screen"),
         snackbarHost = {
             AuthSnackbarHost(
                 hostState = snackBarHostState,
@@ -145,7 +146,7 @@ private fun AuthSnackbarHost(
             onSuccessMessageShown = messages.onSuccessMessageShown,
             onErrorMessageShown = messages.onErrorMessageShown
         ),
-        modifier = modifier
+        modifier = modifier.testTag("auth_snackbar")
     )
 }
 
@@ -195,7 +196,7 @@ private fun AppTitle(
         fontWeight = FontWeight.Bold,
         textAlign = TextAlign.Center,
         color = MaterialTheme.colorScheme.primary,
-        modifier = modifier
+        modifier = modifier.testTag("app_title")
     )
 }
 
@@ -237,6 +238,7 @@ private fun GoogleSignInButton(
     Button(
         onClick = onClick,
         enabled = enabled,
+        modifier = Modifier.testTag("signinButton")
     ) {
         GoogleButtonContent(
             isLoading = isLoading,
@@ -256,6 +258,7 @@ private fun GoogleSignUpButton(
         type = "secondary",
         onClick = onClick,
         enabled = enabled,
+        modifier = Modifier.testTag("signupButton")
     ) {
         GoogleButtonContent(
             isLoading = isLoading,
@@ -277,7 +280,8 @@ private fun GoogleButtonContent(
     if (isLoading) {
         ButtonLoadingIndicator(
             showOnPrimaryColor = showOnPrimaryColor,
-            modifier = modifier
+            modifier = modifier,
+            tag = if (showOnPrimaryColor) "sign_in_loading" else "sign_up_loading"
         )
     } else {
         Row(
@@ -295,12 +299,15 @@ private fun GoogleButtonContent(
 @Composable
 private fun ButtonLoadingIndicator(
     showOnPrimaryColor: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    tag: String
 ) {
     val spacing = LocalSpacing.current
 
     CircularProgressIndicator(
-        modifier = modifier.size(spacing.large),
+        modifier = modifier
+            .size(spacing.large)
+            .testTag(tag),
         color = if (showOnPrimaryColor) {
             MaterialTheme.colorScheme.onPrimary
         } else {

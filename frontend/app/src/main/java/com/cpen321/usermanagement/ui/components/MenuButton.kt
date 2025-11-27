@@ -1,3 +1,5 @@
+package com.cpen321.usermanagement.ui.components
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -15,13 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.cpen321.usermanagement.ui.components.Icon
 import com.cpen321.usermanagement.ui.theme.LocalSpacing
 
 @Composable
 fun MenuButton(
     enabled: Boolean = true,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,
 ) {
     val spacing = LocalSpacing.current
@@ -38,7 +40,7 @@ fun MenuButton(
         border = border,
         onClick = onClick,
         enabled = enabled,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(spacing.extraLarge2),
     ) {
@@ -51,12 +53,14 @@ fun MenuButtonItem(
     text: String,
     iconRes: Int,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val spacing = LocalSpacing.current
 
     MenuButton(
         enabled = true,
         onClick = onClick,
+        modifier = modifier
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),

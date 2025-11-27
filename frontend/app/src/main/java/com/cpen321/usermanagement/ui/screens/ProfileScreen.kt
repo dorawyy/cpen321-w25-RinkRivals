@@ -1,6 +1,5 @@
 package com.cpen321.usermanagement.ui.screens
 
-import MenuButtonItem
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,16 +26,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.cpen321.usermanagement.R
 import com.cpen321.usermanagement.ui.components.Button
+import com.cpen321.usermanagement.ui.components.MenuButtonItem
 import com.cpen321.usermanagement.ui.components.MessageSnackbar
 import com.cpen321.usermanagement.ui.components.MessageSnackbarState
+import com.cpen321.usermanagement.ui.theme.LocalSpacing
 import com.cpen321.usermanagement.ui.viewmodels.AuthViewModel
 import com.cpen321.usermanagement.ui.viewmodels.ProfileUiState
 import com.cpen321.usermanagement.ui.viewmodels.ProfileViewModel
-import com.cpen321.usermanagement.ui.theme.LocalSpacing
 
 private data class ProfileDialogState(
     val showDeleteDialog: Boolean = false
@@ -165,7 +166,7 @@ private fun ProfileTopBar(
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
-        modifier = modifier,
+        modifier = modifier.testTag("profileTopBar"),
         title = {
             Text(
                 text = stringResource(R.string.profile),
@@ -193,6 +194,7 @@ private fun ProfileBody(
         modifier = modifier
             .fillMaxSize()
             .padding(paddingValues)
+            .testTag("profileBody")
     ) {
         when {
             isLoading -> {
@@ -246,7 +248,7 @@ private fun ProfileSection(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.testTag("profileSection"),
         verticalArrangement = Arrangement.spacedBy(LocalSpacing.current.medium)
     ) {
         ManageProfileButton(onClick = onManageProfileClick)
@@ -260,7 +262,7 @@ private fun AccountSection(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.testTag("accountSection"),
         verticalArrangement = Arrangement.spacedBy(LocalSpacing.current.medium)
     ) {
         SignOutButton(onClick = onSignOutClick)
@@ -276,6 +278,7 @@ private fun ManageProfileButton(
         text = stringResource(R.string.manage_profile),
         iconRes = R.drawable.ic_manage_profile,
         onClick = onClick,
+        modifier = Modifier.testTag("manageProfileButton")
     )
 }
 
@@ -287,8 +290,10 @@ private fun SignOutButton(
         text = stringResource(R.string.signout),
         iconRes = R.drawable.ic_arrow_back,
         onClick = onClick,
+        modifier = Modifier.testTag("signOutButton")
     )
 }
+
 @Composable
 private fun DeleteAccountButton(
     onClick: () -> Unit,
@@ -297,6 +302,7 @@ private fun DeleteAccountButton(
         text = stringResource(R.string.delete_account),
         iconRes = R.drawable.ic_delete_forever,
         onClick = onClick,
+        modifier = Modifier.testTag("deleteAccountButton")
     )
 }
 
@@ -307,7 +313,7 @@ private fun DeleteAccountDialog(
     modifier: Modifier = Modifier
 ) {
     AlertDialog(
-        modifier = modifier,
+        modifier = modifier.testTag("deleteAccountDialog"),
         onDismissRequest = onDismiss,
         title = {
             DeleteDialogTitle()
@@ -353,6 +359,7 @@ private fun DeleteDialogConfirmButton(
     Button(
         fullWidth = false,
         onClick = onClick,
+        modifier = Modifier.testTag("confirmDeleteButton")
     ) {
         Text(stringResource(R.string.confirm))
     }
@@ -366,6 +373,7 @@ private fun DeleteDialogDismissButton(
         fullWidth = false,
         type = "secondary",
         onClick = onClick,
+        modifier = Modifier.testTag("dismissDeleteButton")
     ) {
         Text(stringResource(R.string.cancel))
     }
@@ -375,5 +383,5 @@ private fun DeleteDialogDismissButton(
 private fun LoadingIndicator(
     modifier: Modifier = Modifier
 ) {
-    CircularProgressIndicator(modifier = modifier)
+    CircularProgressIndicator(modifier = modifier.testTag("profileLoading"))
 }

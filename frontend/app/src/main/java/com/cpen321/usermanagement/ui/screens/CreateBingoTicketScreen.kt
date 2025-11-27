@@ -1,4 +1,3 @@
-
 package com.cpen321.usermanagement.ui.screens
 
 import androidx.compose.foundation.background
@@ -14,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -83,7 +83,7 @@ fun CreateBingoTicketScreen(
                 Text(text = stringResource(R.string.create_bingo_ticket), fontWeight = FontWeight.Bold)
             },
             navigationIcon = {
-                IconButton(onClick = onBackClick) {
+                IconButton(onClick = onBackClick, modifier = Modifier.testTag("back_button")) {
                     Icon(name = R.drawable.ic_arrow_back)
                 }
             },
@@ -100,7 +100,8 @@ fun CreateBingoTicketScreen(
                             onTicketCreated()
                         }
                     },
-                    enabled = !uiState.isCreating && userId.isNotBlank() && ticketName.isNotBlank() && selectedEvents.none { it == null }
+                    enabled = !uiState.isCreating && userId.isNotBlank() && ticketName.isNotBlank() && selectedEvents.none { it == null },
+                    modifier = Modifier.testTag("createTicketButton")
                 ) {
                     Text(stringResource(R.string.create))
                 }
@@ -123,7 +124,7 @@ fun CreateBingoTicketScreen(
                 value = ticketName,
                 onValueChange = { ticketName = it },
                 label = { Text(stringResource(R.string.ticket_name)) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().testTag("ticketNameTextField"),
             )
 
             // Game dropdown and loading handling
@@ -191,7 +192,8 @@ private fun GameDropdown(
             label = { Text(stringResource(R.string.select_game)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { expanded = true },
+                .clickable { expanded = true }
+                .testTag("gameDropdown"),
             enabled = false,
             readOnly = true
         )
@@ -201,6 +203,7 @@ private fun GameDropdown(
         ) {
             games.forEach { game ->
                 DropdownMenuItem(
+                    modifier = Modifier.testTag("gameDropdownItem_${game.id}"),
                     text = {
                         Column(
                             modifier = Modifier
@@ -256,7 +259,8 @@ private fun BingoGrid(
                             nhlDataManager.formatEventLabel(it)
                         } ?: "",
                         onClick = { onSquareClick(index) },
-                        onRemove = { onRemoveEvent(index) }
+                        onRemove = { onRemoveEvent(index) },
+                        modifier = Modifier.testTag("bingoSquare_$index")
                     )
                 }
             }
@@ -268,10 +272,11 @@ private fun BingoGrid(
 private fun BingoSquare(
     eventText: String,
     onClick: () -> Unit,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .padding(4.dp)
             .size(100.dp)
             .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
@@ -326,15 +331,14 @@ private fun EventPickerDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onEventSelected(event) }
-                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                            .padding(vertical = 8.dp, horizontal = 4.dp)
+                            .testTag("eventPickerItem_${event.id}"),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val teamLogoUrl = if (event.teamAbbrev == game?.homeTeam?.abbrev) {
-                            game?.homeTeam?.logo
-                        } else if (event.teamAbbrev == game?.awayTeam?.abbrev) {
-                            game?.awayTeam?.logo
-                        } else {
-                            null
+                        val teamLogoUrl = when (event.teamAbbrev) {
+                            game?.homeTeam?.abbrev -> game?.homeTeam?.logo
+                            game?.awayTeam?.abbrev -> game?.awayTeam?.logo
+                            else -> null
                         }
 
                         if (teamLogoUrl != null) {

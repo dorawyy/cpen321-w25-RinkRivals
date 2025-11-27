@@ -136,9 +136,89 @@ describe('Media Upload Integration Tests', () => {
     expect(response.body.data).toHaveProperty('image');
     expect(response.body.data.image).toContain(testUserId.toString());
   });
-});
 
-// Direct MediaService Tests
+  // Test: Upload non-image file (covers storage.ts line 30)
+  // Input: Text file instead of image
+  // Expected behavior: Multer rejects non-image file
+  // Expected output: 500 status (multer error handled by error middleware)
+  test('Returns 500 when uploading non-image file', async () => {
+    const testTextPath = path.join(__dirname, '../res/test-text-file.txt');
+
+    // Create a test text file
+    if (!fs.existsSync(path.dirname(testTextPath))) {
+      fs.mkdirSync(path.dirname(testTextPath), { recursive: true });
+    }
+    fs.writeFileSync(testTextPath, 'This is not an image');
+
+    const response = await request(app)
+      .post('/api/media/upload')
+      .set('Authorization', `Bearer ${authToken}`)
+      .attach('media', testTextPath);
+
+    expect(response.status).toBe(500);
+
+    // Clean up
+    if (fs.existsSync(testTextPath)) {
+      fs.unlinkSync(testTextPath);
+    }
+  });
+
+  // Test: Upload file exceeding size limit (covers storage.ts line 38)
+  // Input: File larger than 5MB
+  // Expected behavior: Multer rejects file too large
+  // Expected output: 500 status (multer error handled by error middleware)
+  test('Returns 500 when file size exceeds limit', async () => {
+    const largeFilePath = path.join(__dirname, '../res/large-file.jpg');
+
+    // Create a large file (> 5MB)
+    const largeBuffer = Buffer.alloc(6 * 1024 * 1024); // 6MB
+    fs.writeFileSync(largeFilePath, largeBuffer);
+
+    try {
+      const response = await request(app)
+        .post('/api/media/upload')
+        .set('Authorization', `Bearer ${authToken}`)
+        .attach('media', largeFilePath);
+
+      expect(response.status).toBe(500);
+    } finally {
+      // Clean up
+      if (fs.existsSync(largeFilePath)) {
+        fs.unlinkSync(largeFilePath);
+      }
+    }
+  });
+
+  // Test: Uploads directory already exists (covers storage.ts line 9)
+  // Input: Upload when directory already exists
+  // Expected behavior: Uses existing directory successfully
+  // Expected output: 200 status with successful upload
+  test('Successfully uploads when directory already exists', async () => {
+    const testImagePath = path.join(__dirname, '../res/test-existing-dir.jpg');
+
+    // Create a test image
+    if (!fs.existsSync(path.dirname(testImagePath))) {
+      fs.mkdirSync(path.dirname(testImagePath), { recursive: true });
+    }
+    fs.writeFileSync(testImagePath, Buffer.from('fake-image-data-existing'));
+
+    // Verify uploads directory exists (it should from previous tests)
+    const uploadsDir = path.join(process.cwd(), 'uploads', 'images');
+    expect(fs.existsSync(uploadsDir)).toBe(true);
+
+    const response = await request(app)
+      .post('/api/media/upload')
+      .set('Authorization', `Bearer ${authToken}`)
+      .attach('media', testImagePath);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty(
+      'message',
+      'Image uploaded successfully'
+    );
+    expect(response.body.data).toHaveProperty('image');
+  });
+}); // Direct MediaService Tests
 describe('MediaService Direct Tests', () => {
   const { MediaService } = require('../../src/services/media.service');
   let testFilePath: string;

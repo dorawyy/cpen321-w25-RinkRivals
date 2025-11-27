@@ -36,7 +36,6 @@ fun FriendsScreen(
     viewModel: FriendsViewModel,
 ) {
 
-    // Screen state and authentication info
     val uiState by viewModel.uiState.collectAsState()
     val authState by authViewModel.uiState.collectAsState()
 
@@ -47,7 +46,6 @@ fun FriendsScreen(
         return
     }
 
-    // Current user id and a friendly code to show. `friendCode` may be provided
     val currentUserId = authState.user?._id
     val displayFriendCode = authState.user?.friendCode
 
@@ -59,8 +57,7 @@ fun FriendsScreen(
     val clipboardManager = LocalClipboardManager.current
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    
-    // Capture string resources for use in non-composable contexts
+
     val friendCodeCopiedMsg = stringResource(R.string.friend_code_copied)
     val friendRequestSentMsg = stringResource(R.string.friend_request_sent)
     val enterValidCodeMsg = stringResource(R.string.enter_valid_code)
@@ -75,16 +72,22 @@ fun FriendsScreen(
                 .padding(16.dp)
                 .fillMaxSize()
         ) {
+
             // Friend code card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = 8.dp)
+                    .testTag("friendCodeCard"),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(stringResource(R.string.your_friend_code), fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    Text(
+                        stringResource(R.string.your_friend_code),
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                     Spacer(Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
@@ -92,28 +95,37 @@ fun FriendsScreen(
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("friendCodeText")
                         )
 
-                        TextButton(onClick = {
-                            val code = displayFriendCode ?: ""
-                            clipboardManager.setText(AnnotatedString(code))
-                            coroutineScope.launch { snackbarHostState.showSnackbar(friendCodeCopiedMsg) }
-                        }) { Text(stringResource(R.string.copy)) }
-
-                        Spacer(Modifier.width(8.dp))
-
+                        TextButton(
+                            onClick = {
+                                val code = displayFriendCode ?: ""
+                                clipboardManager.setText(AnnotatedString(code))
+                                coroutineScope.launch { snackbarHostState.showSnackbar(friendCodeCopiedMsg) }
+                            },
+                            modifier = Modifier.testTag("copyFriendCodeButton")
+                        ) {
+                            Text(stringResource(R.string.copy))
+                        }
                     }
                 }
             }
 
             // Add friend by code
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 OutlinedTextField(
                     value = addCodeInput,
                     onValueChange = { addCodeInput = it },
                     label = { Text(stringResource(R.string.enter_friend_code)) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("addFriendInput")
                 )
 
                 Button(
@@ -126,7 +138,9 @@ fun FriendsScreen(
                             coroutineScope.launch { snackbarHostState.showSnackbar(enterValidCodeMsg) }
                         }
                     },
-                    modifier = Modifier.align(Alignment.CenterVertically)
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .testTag("sendFriendRequestButton")
                 ) {
                     Text(stringResource(R.string.send))
                 }
@@ -145,19 +159,30 @@ fun FriendsScreen(
             // Pending Requests
             if (uiState.pendingRequests.isNotEmpty()) {
                 Text(stringResource(R.string.pending_requests), style = MaterialTheme.typography.titleMedium)
-                LazyColumn {
+                LazyColumn(modifier = Modifier.testTag("pendingRequestsList")) {
                     items(uiState.pendingRequests) { req ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 6.dp),
+                                .padding(vertical = 6.dp)
+                                .testTag("pendingRequestRow"),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(req.sender.name)
                             Row {
-                                TextButton(onClick = { viewModel.acceptFriendRequest(req._id) }) { Text(stringResource(R.string.accept)) }
-                                TextButton(onClick = { viewModel.rejectFriendRequest(req._id) }) { Text(stringResource(R.string.reject)) }
+                                TextButton(
+                                    onClick = { viewModel.acceptFriendRequest(req._id) },
+                                    modifier = Modifier.testTag("acceptFriendRequestButton")
+                                ) {
+                                    Text(stringResource(R.string.accept))
+                                }
+                                TextButton(
+                                    onClick = { viewModel.rejectFriendRequest(req._id) },
+                                    modifier = Modifier.testTag("rejectFriendRequestButton")
+                                ) {
+                                    Text(stringResource(R.string.reject))
+                                }
                             }
                         }
                         HorizontalDivider(
@@ -172,21 +197,35 @@ fun FriendsScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Friend List
-            Text(stringResource(R.string.friends_list), style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("friendsSectionHeader"))
+            Text(
+                stringResource(R.string.friends_list),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.testTag("friendsSectionHeader")
+            )
+
             if (uiState.friends.isEmpty()) {
-                Text(stringResource(R.string.no_friends_yet), modifier = Modifier.testTag("noFriendsText"))
+                Text(
+                    stringResource(R.string.no_friends_yet),
+                    modifier = Modifier.testTag("noFriendsText")
+                )
             } else {
                 LazyColumn(modifier = Modifier.testTag("friendsList")) {
                     items(uiState.friends) { friend ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 8.dp)
+                                .testTag("friendRow"),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(friend.name)
-                            TextButton(onClick = { viewModel.removeFriend(friend.id) }) { Text(stringResource(R.string.remove)) }
+                            TextButton(
+                                onClick = { viewModel.removeFriend(friend.id) },
+                                modifier = Modifier.testTag("removeFriendButton")
+                            ) {
+                                Text(stringResource(R.string.remove))
+                            }
                         }
                         HorizontalDivider(
                             Modifier,

@@ -25,6 +25,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -64,7 +65,8 @@ fun MainScreen(
         onTicketClick = onTicketClick,
         onSuccessMessageShown = mainViewModel::clearSuccessMessage,
         upcomingGames = nhlDataState.gameSchedule?.flatMap { it.games }?.take(15) ?: emptyList(),
-        nhlDataManager = mainViewModel.nhlDataManager
+        nhlDataManager = mainViewModel.nhlDataManager,
+        modifier = Modifier.testTag("mainScreen")
     )
 }
 
@@ -126,7 +128,7 @@ private fun AppTitle(
         text = stringResource(R.string.app_name),
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.Medium,
-        modifier = modifier
+        modifier = modifier.testTag("mainTopBarTitle")
     )
 }
 
@@ -186,7 +188,7 @@ private fun MainBody(
                         text = stringResource(R.string.your_live_upcoming_tickets),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 8.dp)
+                        modifier = Modifier.padding(top = 8.dp).testTag("liveTicketsHeader")
                     )
                 }
                 items(liveTickets) { ticket ->
@@ -271,14 +273,16 @@ private fun HeroBanner(
                     text = stringResource(R.string.app_name),
                     color = Color.White,
                     fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.testTag("heroBannerTitle")
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = stringResource(R.string.welcome_back, userName),
                     color = Color(0xFFCCF2FF),
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.testTag("heroBannerWelcomeText")
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(

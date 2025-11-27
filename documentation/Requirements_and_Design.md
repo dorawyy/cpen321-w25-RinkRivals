@@ -23,6 +23,7 @@
 | 26. Nov         | 3.3                          | Added actors to the actors list.                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | 26. Nov         | 3.3, 3.4                     | Removed the view challenges feature as it was vague and really a part of manage challenges. Edited the use case diagram |
 |26. Nov      |  3.5                        | Revised the formal use case specifications to follow a proper user/system sequence. Changed "accept challenge" use case to "Join challenge" as changed in 3.3 and 3.4  |
+| 26. Nov         | 3.5                          | More revisions to formal use case specifications                |
 
 ---
 
@@ -42,7 +43,7 @@ Our app is a social points game based on real life ice hockey games. The purpose
 
 **3. Manage bingo tickets:** Users can create bingo tickets for upcoming hockey games. One game can be chosen for one ticket but multiple tickets may be made for one game. The user can fill their bingo ticket by selecting 9 events from a list and placing them in a 3x3 grid. When the bingo ticket is complete, the user can save it and view it in a tickets list. As the real life hockey game starts, the squares are filled in when the events are met (eg. VAN scores 3+ times).
 
-**4. Manage challenges:** Users can create, delete, accept, decline and leave challenges. The challenge will have a unique game related to it, and the challenge members will each have a ticket in the challenge for the same game. One ticket may be used for one challenge but multiple challenges may use the same ticket. The user who creates the challenge will become the challenge owner and can invite other players from their friends list. Users can view a specific challenge and see the state of all bingo tickets involved in the challenge.
+**4. Manage challenges:** Users can create, delete, join, decline and leave challenges. The challenge will have a unique game related to it, and the challenge members will each have a ticket in the challenge for the same game. One ticket may be used for one challenge but multiple challenges may use the same ticket. The user who creates the challenge will become the challenge owner and can invite other players from their friends list. Users can view a specific challenge and see the state of all bingo tickets involved in the challenge.
 
 ### **3.2. Use Case Diagram**
 
@@ -50,7 +51,7 @@ Our app is a social points game based on real life ice hockey games. The purpose
 
 ### **3.3. Actors Description**
 
-1. **[General user]**: The general user can use all the core functionalities such as signing up, managing friends and bingo tickets and accepting, declining and sending challenges.
+1. **[General user]**: The general user can use all the core functionalities such as signing up, managing friends and bingo tickets, and accepting, declining and sending challenges.
 2. **[The challenge owner]**: The challenge owner is a general user with the ability to close the challenges that are owned.
 3. **[The challenge member]**: The challenge member is a general user with the ability to leave challenges.
 4. **[Live NHL statistics service]**: The NHL statistics service is used to get the schedule, scores and game events.
@@ -84,7 +85,7 @@ Our app is a social points game based on real life ice hockey games. The purpose
 
 1. **[Create challenge]**: The user can use a bingo ticket to challenge one or several friends to create their own bingo ticket on the specific match and see who gets the highest score.
 2. **[Delete challenge]**: The challenge owner can delete a challenge whereby the challenge will disappear for all members of the challenge.
-3. **[Join challenge]**: The user can receive invites and accept them by selecting a bingo ticket for the specific match they have been invited to.
+3. **[Join challenge]**: The user can receive invites and accept them by selecting or creating a bingo ticket for the specific match they have been invited to.
 4. **[Decline challenge]**: The user can decline any challenge.
 5. **[Leave challenge]**: The challenge member can leave a challenge.
 6. **[View challenge details]**: All users can see current participants and their bingo tickets as well as the current points for each ticket.
@@ -97,14 +98,14 @@ Our app is a social points game based on real life ice hockey games. The purpose
 
 **Description**: A user chooses 9 events for an upcoming NHL game from a given list and places them in a 3×3 grid creating a bingo ticket.
 
-**Primary actor(s)**: User
+**Primary actor(s)**: User, NHL statistics service
 
 **Main success scenario**:
 
-1. The user assigns a name to the bingo ticket and selects an upcoming hockey game.
+1. The user assigns a name to the bingo ticket and selects an upcoming hockey game (from a list fetched by NHL statistics service).
 2. The system displays a 3x3 grid for the user to fill in.
 3. The user clicks on one of the 9 boxes.
-4. The system shows a list of events to choose from (40) based on the specific game.
+4. The system fetches the team data for the specific game and shows a list of events to choose from (40).
 5. The user selects an event.
 6. The user repeats step 3-5 nine times.
 7. The system allows the user to create the ticket.
@@ -128,7 +129,7 @@ Our app is a social points game based on real life ice hockey games. The purpose
 
 **Main success scenario**:
 
-1. The user selects a game that they want to make a challenge on.
+1. The user selects a game (from a list fetched by NHL statistics service) that they want to make a challenge on.
 2. The system allows the user to choose a ticket.
 3. The user selects a bingo ticket that is made on the same game.
 4. The system provides a default title to the challenge based on the game.
@@ -140,7 +141,7 @@ Our app is a social points game based on real life ice hockey games. The purpose
 **Failure scenario(s)**:
 
 - 6a. No friends, no game or no ticket is selected.
-  - 6a1. The system displays an error message requiring at least one friend, a game and a ticket.
+  - 6a1. The create button is greyed out and cannot be clicked.
 
 #### Use Case 3: [Join Challenge]
 
@@ -151,7 +152,7 @@ Our app is a social points game based on real life ice hockey games. The purpose
 **Main success scenario**:
 
 1. The user views the details of a pending challenge.
-2. The system shows the details of challenge and prompts the user to decline or select a bingo ticket their own to join the challenge.
+2. The system shows the details of challenge and prompts the user to decline or select a bingo ticket of their own to join the challenge.
 3. The user selects an existing bingo ticket for the specified game and joins the challenge.
 4. The system moves the user from the list of invited users to the list of challenge partcipants.
 
@@ -166,12 +167,12 @@ Our app is a social points game based on real life ice hockey games. The purpose
 
 **Description**: A user selects a challenge and views all the participatnts and their bingo tickets to see who predicted the most events.
 
-**Primary actor(s)**: User
+**Primary actor(s)**: User, NHL statistics service
 
 **Main success scenario**:
 
 1. The user clicks a challenge.
-2. The system displays the challenge details with title, game state, participants and their bingo tickets automatically filled out based on the real game.
+2. The system displays the challenge details with title, game state, participants and their bingo tickets automatically filled out based on the real game statistics fetched by the NHL statistics service.
 **Failure scenario(s)**:
 
 - 2a. One of the participants has deleted their account.
@@ -179,7 +180,7 @@ Our app is a social points game based on real life ice hockey games. The purpose
 
 #### Use Case 5: [Send friend request]
 
-**Description**: A user finds another user via their email and requests to become friends.
+**Description**: A user finds another user via their friend code and requests to become friends.
 
 **Primary actor(s)**: User
 
@@ -187,7 +188,7 @@ Our app is a social points game based on real life ice hockey games. The purpose
 
 1. The user navigates to their list of current friends.
 2. The system displays a list of their friends and the friend code needed to be found as a friend.
-3. The user types the friendCode of another user in a form and clicks to add friend.
+3. The user types the friend code of another user in a form and clicks to add friend.
 4. The system notifies the user that the request has been successfully sent.
 
 **Failure scenario(s)**:
@@ -195,10 +196,10 @@ Our app is a social points game based on real life ice hockey games. The purpose
 - 3a. The user enters an invalid friendCode
   - 3a1. The system displays a message: “Please enter a valid friend code.”
 
-- 3b. There is no user associated with the friendCode.
+- 3b. There is no user associated with the friend code.
   - 3b1. The system notifies the user that no user is associated with that email.
 
-- 3c. The user associated with the email is already a friend.
+- 3c. The user associated with the friend code is already a friend.
   - 3c1. The system notifies the user that the accounts are already friends.
 
 ### **3.6. Screen Mock-ups**

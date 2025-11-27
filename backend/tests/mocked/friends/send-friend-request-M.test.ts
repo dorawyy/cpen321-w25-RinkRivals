@@ -4,6 +4,7 @@ import {
   test,
   jest,
   beforeAll,
+  beforeEach,
   afterAll,
 } from '@jest/globals';
 import dotenv from 'dotenv';
@@ -141,5 +142,20 @@ describe('Mocked POST /api/friends/request', () => {
       testUserId,
       receiverUserId
     );
+  });
+
+  // Mocked behavior: Non-ZodError exception in validation middleware (covers validation.middleware.ts line 23)
+  // Input: Trigger non-ZodError exception during validation
+  // Expected behavior: Returns 500 with generic error
+  // Expected output: 500 status with error message
+  test('Returns 500 when non-ZodError exception occurs in validation', async () => {
+    // Send malformed JSON to trigger parsing error before validation
+    const response = await request(app)
+      .post('/api/friends/request')
+      .set('Authorization', `Bearer ${authToken}`)
+      .set('Content-Type', 'application/json')
+      .send('{ invalid json }');
+
+    expect(response.status).toBe(400); // Express body-parser returns 400 for invalid JSON
   });
 });

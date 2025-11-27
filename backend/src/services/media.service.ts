@@ -39,17 +39,12 @@ export class MediaService {
         throw new Error('Invalid filename - contains unsafe characters');
       }
 
-      // Additional check: ensure no path traversal sequences
-      if (fileName.includes('..')) {
-        throw new Error('Invalid filename - path traversal detected');
-      }
-
       // Get the allowed directory and list actual files with full paths
       const allowedDir = path.resolve(IMAGES_DIR);
-      
+
       // Read directory and construct paths from actual filesystem entries only
       const files = fs.readdirSync(allowedDir);
-      
+
       // Find matching file in the directory listing
       for (const file of files) {
         if (file === fileName) {

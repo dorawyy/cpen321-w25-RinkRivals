@@ -463,4 +463,94 @@ describe('MediaService Direct Tests', () => {
       }
     }
   });
+
+  // Test: saveImage uses fallback when UPLOADS_DIR is undefined (covers line 16)
+  // Input: Valid file, UPLOADS_DIR env var undefined
+  // Expected behavior: Uses default 'uploads/images'
+  // Expected output: Returns path with default uploads dir
+  test('saveImage uses fallback path when UPLOADS_DIR is undefined', async () => {
+    const uploadsDir = path.join(process.cwd(), 'uploads', 'images');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const testFileName = `test-fallback-${Date.now()}.jpg`;
+    testFilePath = path.join(uploadsDir, testFileName);
+    fs.writeFileSync(testFilePath, 'test data');
+
+    const originalUploadsDir = process.env.UPLOADS_DIR;
+    delete process.env.UPLOADS_DIR;
+
+    try {
+      const result = await MediaService.saveImage(testFilePath, testUserId);
+
+      expect(result).toContain('uploads/images/');
+      expect(result).toMatch(/^uploads\/images\//);
+    } finally {
+      process.env.UPLOADS_DIR = originalUploadsDir;
+
+      // Clean up created file
+      const files = fs.readdirSync(uploadsDir);
+      const testFiles = files.filter(file => file.includes(testUserId));
+      testFiles.forEach(file => {
+        const filePath = path.join(uploadsDir, file);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      });
+    }
+  });
+
+  // Test: deleteImage uses fallback when UPLOADS_DIR is undefined (covers line 28)
+  // Input: Valid image URL, UPLOADS_DIR env var undefined
+  // Expected behavior: Uses default 'uploads/images'
+  // Expected output: File is deleted
+  test('deleteImage uses fallback path when UPLOADS_DIR is undefined', async () => {
+    const uploadsDir = path.join(process.cwd(), 'uploads', 'images');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const testFileName = `test-fallback-delete-${Date.now()}.jpg`;
+    testFilePath = path.join(uploadsDir, testFileName);
+    fs.writeFileSync(testFilePath, 'test data');
+
+    expect(fs.existsSync(testFilePath)).toBe(true);
+
+    const originalUploadsDir = process.env.UPLOADS_DIR;
+    delete process.env.UPLOADS_DIR;
+
+    try {
+      await MediaService.deleteImage(`uploads/images/${testFileName}`);
+      expect(fs.existsSync(testFilePath)).toBe(false);
+    } finally {
+      process.env.UPLOADS_DIR = originalUploadsDir;
+    }
+  });
+
+  // Test: deleteAllUserImages uses fallback when UPLOADS_DIR is undefined (covers line 71)
+  // Input: User ID, UPLOADS_DIR env var undefined
+  // Expected behavior: Uses default 'uploads/images'
+  // Expected output: Attempts to delete user files
+  test('deleteAllUserImages uses fallback path when UPLOADS_DIR is undefined', async () => {
+    const uploadsDir = path.join(process.cwd(), 'uploads', 'images');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const file1 = path.join(uploadsDir, `${testUserId}-fallback1.jpg`);
+    fs.writeFileSync(file1, 'test1');
+
+    const originalUploadsDir = process.env.UPLOADS_DIR;
+    delete process.env.UPLOADS_DIR;
+
+    try {
+      await MediaService.deleteAllUserImages(testUserId);
+
+      // Clean up manually
+      if (fs.existsSync(file1)) fs.unlinkSync(file1);
+    } finally {
+      process.env.UPLOADS_DIR = originalUploadsDir;
+    }
+  });
 });

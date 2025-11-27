@@ -24,6 +24,7 @@
 | 26. Nov         | 3.3, 3.4                     | Removed the view challenges feature as it was vague and really a part of manage challenges. Edited the use case diagram |
 |26. Nov      |  3.5                        | Revised the formal use case specifications to follow a proper user/system sequence. Changed "accept challenge" use case to "Join challenge" as changed in 3.3 and 3.4  |
 | 26. Nov         | 3.5                          | More revisions to formal use case specifications                |
+|27. Nov| 3.7, 4.1| Added missing media upload to the users interface and added a justification to NFR 1 |
 
 ---
 

@@ -129,4 +129,30 @@ describe('Mocked POST /api/media/upload - Error Handling', () => {
     expect(response.status).toBe(500);
     expect(MediaService.saveImage).toHaveBeenCalledTimes(1);
   });
+
+  // Test: CRLF injection attempt in file path (covers sanitizeInput.util.ts line 7)
+  // Input: File path with newline character
+  // Expected behavior: Throws CRLF injection error
+  // Expected output: 500 status with CRLF error message
+  test('Detects CRLF injection attempt in file path', async () => {
+    // Spy on sanitizeInput and mock it to call the original with a malicious path
+    const sanitizeUtil = require('../../../src/utils/sanitizeInput.util');
+    const originalSanitize = sanitizeUtil.sanitizeInput;
+    
+    const mockSanitize = jest.spyOn(sanitizeUtil, 'sanitizeInput');
+    mockSanitize.mockImplementationOnce(() => {
+      // Call original with malicious input to trigger the CRLF detection
+      return originalSanitize('test\npath.jpg');
+    });
+
+    const response = await request(app)
+      .post('/api/media/upload')
+      .set('Authorization', `Bearer ${authToken}`)
+      .attach('media', testImagePath);
+
+    expect(response.status).toBe(500);
+    expect(response.body.message).toContain('CRLF injection');
+    
+    mockSanitize.mockRestore();
+  });
 });

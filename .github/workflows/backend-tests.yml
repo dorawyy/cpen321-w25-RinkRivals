@@ -53,7 +53,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./backend
-        run: npm test -- --coverage
+        run: npm test -- --coverage --silent
 
       - name: Upload test coverage
         if: always()

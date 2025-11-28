@@ -2,10 +2,10 @@
 
 ## 1. Change History
 
-| **Change Date**   | **Modified Sections** | **Rationale** |
-| ----------------- | --------------------- | ------------- |
-| 26. Nov. | 2.1.1 | added some missing Tests to the table  |
-||||
+| **Change Date** | **Modified Sections** | **Rationale**                         |
+| --------------- | --------------------- | ------------------------------------- |
+| 26. Nov.        | 2.1.1                 | added some missing Tests to the table |
+|                 |                       |                                       |
 
 ---
 
@@ -28,14 +28,13 @@
 | **GET /api/friends/list**           | `tests/unmocked/friends/get-friends.test.ts`                 | `tests/mocked/friends/get-friends-M.test.ts`              | Friend DB, User DB    |
 | **GET /api/friends/pending**        | `tests/unmocked/friends/get-pending-requests.test.ts`        | `tests/mocked/friends/get-pending-requests-M.test.ts`     | Friend DB, User DB    |
 | **DELETE /api/friends/:friendId**   | `tests/unmocked/friends/remove-friend.test.ts`               | `tests/mocked/friends/remove-friend-M.test.ts`            | Friend DB, User DB    |
-| **POST /api/auth/signin**           | `tests/unmocked/auth/signin.test.ts`                         | `tests/mocked/auth/signin-M.test.ts`                           | Google auth, User DB       |
-| **POST /api/auth/signup**           | `tests/unmocked/auth/signup.test.ts`                         | `tests/mocked/auth/signup-M.test.ts`                           | Google auth, User DB       |
-| **DELETE /api/user/profile**        | `tests/unmocked/user/delete-profile.test.ts`                 | `tests/mocked/user/delete-profile-M.test.ts`                      | User DB       |
-| **GET /api/user/profile**        | `tests/unmocked/user/get-profile.test.ts`                 | `tests/mocked/user/get-profile-M.test.ts`                      | User DB       |
-| **GET /api/user/:id**        | `tests/unmocked/user/get-user-info-by-id.test.ts`                 | `tests/mocked/user/get-user-info-by-id-M.test.ts`                      | User DB       |
-| **PUT /api/user/profile**        | `tests/unmocked/user/update-profile.test.ts`                 | `tests/mocked/user/update-profile-M.test.ts`                      | User DB       |
-| **POST /api/media/upload**        |                  | `tests/mocked/media/media-controller-M.test.ts`                   | User DB       |
-
+| **POST /api/auth/signin**           | `tests/unmocked/auth/signin.test.ts`                         | `tests/mocked/auth/signin-M.test.ts`                      | Google auth, User DB  |
+| **POST /api/auth/signup**           | `tests/unmocked/auth/signup.test.ts`                         | `tests/mocked/auth/signup-M.test.ts`                      | Google auth, User DB  |
+| **DELETE /api/user/profile**        | `tests/unmocked/user/delete-profile.test.ts`                 | `tests/mocked/user/delete-profile-M.test.ts`              | User DB               |
+| **GET /api/user/profile**           | `tests/unmocked/user/get-profile.test.ts`                    | `tests/mocked/user/get-profile-M.test.ts`                 | User DB               |
+| **GET /api/user/:id**               | `tests/unmocked/user/get-user-info-by-id.test.ts`            | `tests/mocked/user/get-user-info-by-id-M.test.ts`         | User DB               |
+| **PUT /api/user/profile**           | `tests/unmocked/user/update-profile.test.ts`                 | `tests/mocked/user/update-profile-M.test.ts`              | User DB               |
+| **POST /api/media/upload**          |                                                              | `tests/mocked/media/media-controller-M.test.ts`           | User DB               |
 
 Integration tests are located in `tests/integration-tests/` and test our NHL service, media service, and middleware like errorhandler.
 
@@ -79,6 +78,7 @@ Commit SHA: `dcb18176d01bdcc9733d3ed655c656fea990db2e`
 ### 2.5. Jest Coverage Report Screenshots for Both Tests With and Without Mocking
 
 #### IMPORTANT - due to our reduced scope we have not achieved 100 % coverage. We have left out the testing of our challenges feature. This is the reason we do not acheive full coverage in the following files:
+
 - challenges.controller.ts
 - challenges.model.ts
 - socket.service.ts

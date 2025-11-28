@@ -47,6 +47,7 @@ jobs:
           MONGODB_URI=mongodb://localhost:27017/hockey-test
           JWT_SECRET=${{ secrets.TEST_JWT_SECRET }}
           GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          UPLOADS_DIR=uploads/images
           PORT=3000
           EOF
           chmod 600 .env.test

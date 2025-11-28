@@ -21,10 +21,10 @@
 | 9. Nov          | 3.1, 3.4, 3.5                | Updated challenge requirements to reflect what is in our app                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | 26. Nov         | 3.1, Manage challenges       | Updated feature description to reflect our app                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | 26. Nov         | 3.3                          | Added actors to the actors list.                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| 26. Nov         | 3.3, 3.4                     | Removed the view challenges feature as it was vague and really a part of manage challenges. Edited the use case diagram |
-|26. Nov      |  3.5                        | Revised the formal use case specifications to follow a proper user/system sequence. Changed "accept challenge" use case to "Join challenge" as changed in 3.3 and 3.4  |
-| 26. Nov         | 3.5                          | More revisions to formal use case specifications                |
-|27. Nov| 3.7, 4.1| Added missing media upload to the users interface and added a justification to NFR 1 |
+| 26. Nov         | 3.3, 3.4                     | Removed the view challenges feature as it was vague and really a part of manage challenges. Edited the use case diagram                                                                                                                                                                                                                                                                                                                                                                                 |
+| 26. Nov         | 3.5                          | Revised the formal use case specifications to follow a proper user/system sequence. Changed "accept challenge" use case to "Join challenge" as changed in 3.3 and 3.4                                                                                                                                                                                                                                                                                                                                   |
+| 26. Nov         | 3.5                          | More revisions to formal use case specifications                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 27. Nov         | 3.7, 4.1                     | Added missing media upload to the users interface and added a justification to NFR 1                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 ---
 
@@ -118,8 +118,6 @@ Our app is a social points game based on real life ice hockey games. The purpose
 - 2a. No upcoming hockey games are available.
   - 2a1. The system displays an error message saying there are no upcoming games.
 
-
-
 <a name="uc2"></a>
 
 #### Use Case 2: [Create Challenge]
@@ -174,7 +172,7 @@ Our app is a social points game based on real life ice hockey games. The purpose
 
 1. The user clicks a challenge.
 2. The system displays the challenge details with title, game state, participants and their bingo tickets automatically filled out based on the real game statistics fetched by the NHL statistics service.
-**Failure scenario(s)**:
+   **Failure scenario(s)**:
 
 - 2a. One of the participants has deleted their account.
   - 2a1. The system displays "User deleted" instead of the name of the participant.
@@ -195,9 +193,11 @@ Our app is a social points game based on real life ice hockey games. The purpose
 **Failure scenario(s)**:
 
 - 3a. The user enters an invalid friendCode
+
   - 3a1. The system displays a message: “Please enter a valid friend code.”
 
 - 3b. There is no user associated with the friend code.
+
   - 3b1. The system notifies the user that no user is associated with that email.
 
 - 3c. The user associated with the friend code is already a friend.

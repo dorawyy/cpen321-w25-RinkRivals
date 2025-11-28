@@ -24,6 +24,7 @@
 | 26. Nov         | 3.3, 3.4                     | Removed the view challenges feature as it was vague and really a part of manage challenges. Edited the use case diagram |
 |26. Nov      |  3.5                        | Revised the formal use case specifications to follow a proper user/system sequence. Changed "accept challenge" use case to "Join challenge" as changed in 3.3 and 3.4  |
 | 26. Nov         | 3.5                          | More revisions to formal use case specifications                |
+|27. Nov| 3.7, 4.1| Added missing media upload to the users interface and added a justification to NFR 1 |
 
 ---
 
@@ -213,7 +214,7 @@ Our app is a social points game based on real life ice hockey games. The purpose
 1. **[Live updates]**
 
    - **Description**: Bingo ticket status should update within 1 min of the event occurring.
-   - **Justification**: The element of live interactivity is very important as the game depends on a live hockey event, and the game needs to be updated quickly for the user to follow the state of the challenge. We include this requirement as it is essential for any further develpoments of the app even though the current state of the app does not rely as heavily on the live event updates as the user fills out the bingo ticket themselves.
+   - **Justification**: The element of live interactivity is very important as the game depends on a live hockey event, and the game needs to be updated quickly for the user to follow the state of the challenge. We choose one minute as this is the maximum delay users are expecting for simple problems that they expect the computer to solve.
 
 2. **[Seamless bingo ticket building]**
    - **Description**: When creating a bingo ticket the system should be able to find events in less than 1 s.
@@ -247,6 +248,10 @@ Our app is a social points game based on real life ice hockey games. The purpose
           - **Parameters**: `Authorization: Bearer {token}`
           - **Returns**: `{ message: String }`
           - **Purpose**: Permanently deletes the authenticated user's account and all associated data.
+        - `POST /api/media/upload`
+          - **Parameters**: `Authorization: Bearer {token}, media: Image`
+          - **Returns**: `{ image: String }`
+          - **Purpose**: Uploads the profile picture to the backend.
      2. **Java-style Interfaces** (Backend Internal):
         - `create(userInfo: GoogleUserInfo): User`
           - **Purpose**: Creates a user document in database with ID.

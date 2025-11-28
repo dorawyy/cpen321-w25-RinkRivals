@@ -16,7 +16,11 @@ import org.junit.Rule
 import org.junit.Test
 import java.lang.Thread.sleep
 
-//Log in to EMAIL_1 and EMAIL_2 using password "rinkrivals321" if necessary
+/**
+ * End-to-end tests for the application.
+ * These tests cover the full user flow for major features.
+ * Note: Before running, ensure you are logged in to EMAIL_1 and EMAIL_2 with the password "rinkrivals321" if necessary.
+ */
 @HiltAndroidTest
 class E2ETests {
 
@@ -36,12 +40,22 @@ class E2ETests {
     // Helpers
     // --------------------------------------------------------------------
 
+    /**
+     * Waits for a specified amount of time. This is a simple helper to pause execution,
+     * allowing for UI updates or async operations to complete.
+     * @param millis The time to wait in milliseconds.
+     */
     private fun waitForVm(millis: Long) {
         composeRule.waitForIdle()
         sleep(millis)
         composeRule.waitForIdle()
     }
 
+    /**
+     * Signs in a user with the given email. This function handles the UI interactions
+     * required to go through the sign-in flow.
+     * @param email The email of the user to sign in.
+     */
     private fun signIn(email: String) {
         composeRule.waitForIdle()
 
@@ -62,6 +76,10 @@ class E2ETests {
         composeRule.waitForIdle()
     }
 
+    /**
+     * Logs out the current user. This function navigates to the profile screen
+     * and performs the logout action.
+     */
     private fun logout() {
         composeRule.onNodeWithTag("nav_profile").performClick()
         waitForVm(400)
@@ -73,16 +91,25 @@ class E2ETests {
         composeRule.waitForIdle()
     }
 
+    /**
+     * Navigates to the Friends screen from the main navigation.
+     */
     private fun navigateToFriends() {
         composeRule.onNodeWithTag("nav_friends").performClick()
         composeRule.waitUntilNodeExists("friendsSectionHeader")
     }
 
+    /**
+     * Navigates to the Tickets screen from the main navigation.
+     */
     private fun goToTickets() {
         composeRule.onNodeWithTag("nav_tickets").performClick()
         composeRule.waitUntilNodeExists("addTicketButton")
     }
 
+    /**
+     * Fills all nine squares of a bingo ticket. This is used in the ticket creation flow.
+     */
     private fun fillAllBingoSquares() {
         repeat(9) { index ->
             composeRule.onNodeWithTag("bingoSquare_$index").performClick()
@@ -100,6 +127,10 @@ class E2ETests {
         }
     }
 
+    /**
+     * Captures the friend code from the UI.
+     * @return The friend code as a [String].
+     */
     private fun captureFriendCode(): String {
         return composeRule
             .onNodeWithTag("friendCodeText")
@@ -113,18 +144,33 @@ class E2ETests {
     // Extensions
     // --------------------------------------------------------------------
 
+    /**
+     * Extension function for [ComposeTestRule] to wait until a node with a specific test tag exists.
+     * @param tag The test tag to wait for.
+     * @param timeout The maximum time to wait in milliseconds.
+     */
     private fun ComposeTestRule.waitUntilNodeExists(tag: String, timeout: Long = 10_000) {
         waitUntil(timeout) {
             onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty()
         }
     }
 
+    /**
+     * Creates a [SemanticsMatcher] that checks if a node's test tag starts with a given prefix.
+     * @param prefix The prefix to match against.
+     * @return A [SemanticsMatcher] for the given prefix.
+     */
     private fun hasTestTagPrefix(prefix: String): SemanticsMatcher {
         return SemanticsMatcher("${SemanticsProperties.TestTag.name} startsWith $prefix") { node ->
             node.config.getOrNull(SemanticsProperties.TestTag)?.startsWith(prefix) == true
         }
     }
 
+    /**
+     * Extension function for [ComposeTestRule] to wait until a node with a test tag prefix exists.
+     * @param prefix The test tag prefix to wait for.
+     * @param timeout The maximum time to wait in milliseconds.
+     */
     private fun ComposeTestRule.waitUntilNodeExistsWithPrefix(prefix: String, timeout: Long = 10_000) {
         waitUntil(timeout) {
             onAllNodes(hasTestTagPrefix(prefix)).fetchSemanticsNodes().isNotEmpty()
@@ -135,6 +181,13 @@ class E2ETests {
     // FRIENDS TEST
     // --------------------------------------------------------------------
 
+    /**
+     * Tests the entire friends flow:
+     * 1. User 2 logs in and gets their friend code.
+     * 2. User 1 logs in, adds User 2 as a friend, and sends a request.
+     * 3. User 2 logs in again and accepts the friend request.
+     * 4. User 1 logs in one more time and removes User 2 from their friends list.
+     */
     @Test
     fun testFriendsFlow() {
         Log.d("TEST_FRIENDS", "Injecting Hilt")
@@ -191,6 +244,14 @@ class E2ETests {
     // TICKETS TEST
     // --------------------------------------------------------------------
 
+    /**
+     * Tests the entire ticket creation and deletion flow:
+     * 1. A user logs in and navigates to the tickets screen.
+     * 2. The user creates a new bingo ticket, filling all squares.
+     * 3. The test verifies that the ticket was created.
+     * 4. The user deletes the newly created ticket.
+     * 5. The test verifies that the ticket was deleted.
+     */
     @Test
     fun testTicketsFlow() {
         Log.d("TEST_TICKETS", "Injecting Hilt")

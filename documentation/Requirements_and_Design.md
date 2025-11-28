@@ -25,6 +25,7 @@
 | 26. Nov         | 3.5                          | Revised the formal use case specifications to follow a proper user/system sequence. Changed "accept challenge" use case to "Join challenge" as changed in 3.3 and 3.4                                                                                                                                                                                                                                                                                                                                   |
 | 26. Nov         | 3.5                          | More revisions to formal use case specifications                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | 27. Nov         | 3.7, 4.1                     | Added missing media upload to the users interface and added a justification to NFR 1                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 28. Nov         | 3.5                          | Changed create ticket formal use case to be consistent with actual test |
 
 ---
 
@@ -95,7 +96,7 @@ Our app is a social points game based on real life ice hockey games. The purpose
 
 <a name="uc1"></a>
 
-#### Use Case 1: [Creating a Bingo Ticket]
+#### Use Case 1: [Create a Bingo Ticket]
 
 **Description**: A user chooses 9 events for an upcoming NHL game from a given list and places them in a 3×3 grid creating a bingo ticket.
 
@@ -103,20 +104,14 @@ Our app is a social points game based on real life ice hockey games. The purpose
 
 **Main success scenario**:
 
-1. The user assigns a name to the bingo ticket and selects an upcoming hockey game (from a list fetched by NHL statistics service).
-2. The system displays a 3x3 grid for the user to fill in.
-3. The user clicks on one of the 9 boxes.
-4. The system fetches the team data for the specific game and shows a list of events to choose from (40).
-5. The user selects an event.
-6. The user repeats step 3-5 nine times.
-7. The system allows the user to create the ticket.
-8. The user creates the ticket.
-9. The system shows the ticket in the list of tickets.
-
-**Failure scenario(s)**:
-
-- 2a. No upcoming hockey games are available.
-  - 2a1. The system displays an error message saying there are no upcoming games.
+1. The user navigates to the Tickets screen.
+2. The user presses "add ticket".
+3. The system displays ticket creation screen.
+4. The user enters a ticket name.
+5. The user selects a game from dropdown.
+6. The user fills all bingo squares by selecting events.
+7. The user presses “Create Ticket”.
+8. The system shows the ticket list with the newly created ticket.
 
 <a name="uc2"></a>
 

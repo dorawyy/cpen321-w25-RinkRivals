@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Testing and Code Review</title>
+    <style>
+      /* From extension vscode.github */
+      /*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+      .vscode-dark img[src$="\#gh-light-mode-only"],
+      .vscode-light img[src$="\#gh-dark-mode-only"],
+      .vscode-high-contrast:not(.vscode-high-contrast-light)
+        img[src$="\#gh-light-mode-only"],
+      .vscode-high-contrast-light img[src$="\#gh-dark-mode-only"] {
+        display: none;
+      }
+    </style>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css"
+    />
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI",
+          system-ui, "Ubuntu", "Droid Sans", sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+    </style>
+    <style>
+      .task-list-item {
+        list-style-type: none;
+      }
+
+      .task-list-item-checkbox {
+        margin-left: -20px;
+        vertical-align: middle;
+        pointer-events: none;
+      }
+    </style>
+    <style>
+      :root {
+        --color-note: #0969da;
+        --color-tip: #1a7f37;
+        --color-warning: #9a6700;
+        --color-severe: #bc4c00;
+        --color-caution: #d1242f;
+        --color-important: #8250df;
+      }
+    </style>
+    <style>
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --color-note: #2f81f7;
+          --color-tip: #3fb950;
+          --color-warning: #d29922;
+          --color-severe: #db6d28;
+          --color-caution: #f85149;
+          --color-important: #a371f7;
+        }
+      }
+    </style>
+    <style>
+      .markdown-alert {
+        padding: 0.5rem 1rem;
+        margin-bottom: 16px;
+        color: inherit;
+        border-left: 0.25em solid #888;
+      }
+
+      .markdown-alert > :first-child {
+        margin-top: 0;
+      }
+
+      .markdown-alert > :last-child {
+        margin-bottom: 0;
+      }
+
+      .markdown-alert .markdown-alert-title {
+        display: flex;
+        font-weight: 500;
+        align-items: center;
+        line-height: 1;
+      }
+
+      .markdown-alert .markdown-alert-title .octicon {
+        margin-right: 0.5rem;
+        display: inline-block;
+        overflow: visible !important;
+        vertical-align: text-bottom;
+        fill: currentColor;
+      }
+
+      .markdown-alert.markdown-alert-note {
+        border-left-color: var(--color-note);
+      }
+
+      .markdown-alert.markdown-alert-note .markdown-alert-title {
+        color: var(--color-note);
+      }
+
+      .markdown-alert.markdown-alert-important {
+        border-left-color: var(--color-important);
+      }
+
+      .markdown-alert.markdown-alert-important .markdown-alert-title {
+        color: var(--color-important);
+      }
+
+      .markdown-alert.markdown-alert-warning {
+        border-left-color: var(--color-warning);
+      }
+
+      .markdown-alert.markdown-alert-warning .markdown-alert-title {
+        color: var(--color-warning);
+      }
+
+      .markdown-alert.markdown-alert-tip {
+        border-left-color: var(--color-tip);
+      }
+
+      .markdown-alert.markdown-alert-tip .markdown-alert-title {
+        color: var(--color-tip);
+      }
+
+      .markdown-alert.markdown-alert-caution {
+        border-left-color: var(--color-caution);
+      }
+
+      .markdown-alert.markdown-alert-caution .markdown-alert-title {
+        color: var(--color-caution);
+      }
+    </style>
+  </head>
+  <body class="vscode-body vscode-light">
+    <h1 id="testing-and-code-review">Testing and Code Review</h1>
+    <h2 id="1-change-history">1. Change History</h2>
+    <table>
+      <thead>
+        <tr>
+          <th><strong>Change Date</strong></th>
+          <th><strong>Modified Sections</strong></th>
+          <th><strong>Rationale</strong></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>26. Nov.</td>
+          <td>2.1.1</td>
+          <td>added some missing Tests to the table</td>
+        </tr>
+        <tr>
+          <td>28. Nov.</td>
+          <td>4.2</td>
+          <td>
+            Fixed frontent test specifications and added test result image
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <hr />
+    <h2 id="2-back-end-test-specification-apis">
+      2. Back-end Test Specification: APIs
+    </h2>
+    <h3 id="21-locations-of-back-end-tests-and-instructions-to-run-them">
+      2.1. Locations of Back-end Tests and Instructions to Run Them
+    </h3>
+    <h4 id="211-tests">2.1.1. Tests</h4>
+    <table>
+      <thead>
+        <tr>
+          <th><strong>Interface</strong></th>
+          <th><strong>Describe Group Location, No Mocks</strong></th>
+          <th><strong>Describe Group Location, With Mocks</strong></th>
+          <th><strong>Mocked Components</strong></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>GET /api/tickets/user/:userId</strong></td>
+          <td>
+            <code>tests/unmocked/bingo-tickets/get-user-tickets.test.ts</code>
+          </td>
+          <td>
+            <code>tests/mocked/bingo-tickets/get-user-tickets-M.test.ts</code>
+          </td>
+          <td>Ticket DB, User DB</td>
+        </tr>
+        <tr>
+          <td><strong>GET /api/tickets/:id</strong></td>
+          <td>
+            <code>tests/unmocked/bingo-tickets/get-ticket-by-id.test.ts</code>
+          </td>
+          <td>
+            <code>tests/mocked/bingo-tickets/get-ticket-by-id-M.test.ts</code>
+          </td>
+          <td>Ticket DB, User DB</td>
+        </tr>
+        <tr>
+          <td><strong>POST /api/tickets</strong></td>
+          <td>
+            <code
+              >tests/unmocked/bingo-tickets/post-bingo-tickets-NM.test.ts</code
+            >
+          </td>
+          <td>
+            <code>tests/mocked/bingo-tickets/post-bingo-tickets-M.test.ts</code>
+          </td>
+          <td>Ticket DB, User DB</td>
+        </tr>
+        <tr>
+          <td><strong>PUT /api/tickets/:id/crossedOff</strong></td>
+          <td>
+            <code>tests/unmocked/bingo-tickets/update-crossed-off.test.ts</code>
+          </td>
+          <td>
+            <code>tests/mocked/bingo-tickets/update-crossed-off-M.test.ts</code>
+          </td>
+          <td>Ticket DB, User DB</td>
+        </tr>
+        <tr>
+          <td><strong>DELETE /api/tickets/:id</strong></td>
+          <td>
+            <code>tests/unmocked/bingo-tickets/delete-ticket.test.ts</code>
+          </td>
+          <td>
+            <code>tests/mocked/bingo-tickets/delete-ticket-M.test.ts</code>
+          </td>
+          <td>Ticket DB, User DB</td>
+        </tr>
+        <tr>
+          <td><strong>POST /api/friends/send</strong></td>
+          <td>
+            <code>tests/unmocked/friends/send-friend-request.test.ts</code>
+          </td>
+          <td>
+            <code>tests/mocked/friends/send-friend-request-M.test.ts</code>
+          </td>
+          <td>Friend DB, User DB</td>
+        </tr>
+        <tr>
+          <td><strong>POST /api/friends/accept</strong></td>
+          <td>
+            <code>tests/unmocked/friends/accept-friend-request.test.ts</code>
+          </td>
+          <td>
+            <code>tests/mocked/friends/accept-friend-request-M.test.ts</code>
+          </td>
+          <td>Friend DB, User DB</td>
+        </tr>
+        <tr>
+          <td><strong>POST /api/friends/reject</strong></td>
+          <td>
+            <code>tests/unmocked/friends/reject-friend-request.test.ts</code>
+          </td>
+          <td>
+            <code>tests/mocked/friends/reject-friend-request-M.test.ts</code>
+          </td>
+          <td>Friend DB, User DB</td>
+        </tr>
+        <tr>
+          <td><strong>GET /api/friends/list</strong></td>
+          <td><code>tests/unmocked/friends/get-friends.test.ts</code></td>
+          <td><code>tests/mocked/friends/get-friends-M.test.ts</code></td>
+          <td>Friend DB, User DB</td>
+        </tr>
+        <tr>
+          <td><strong>GET /api/friends/pending</strong></td>
+          <td>
+            <code>tests/unmocked/friends/get-pending-requests.test.ts</code>
+          </td>
+          <td>
+            <code>tests/mocked/friends/get-pending-requests-M.test.ts</code>
+          </td>
+          <td>Friend DB, User DB</td>
+        </tr>
+        <tr>
+          <td><strong>DELETE /api/friends/:friendId</strong></td>
+          <td><code>tests/unmocked/friends/remove-friend.test.ts</code></td>
+          <td><code>tests/mocked/friends/remove-friend-M.test.ts</code></td>
+          <td>Friend DB, User DB</td>
+        </tr>
+        <tr>
+          <td><strong>POST /api/auth/signin</strong></td>
+          <td><code>tests/unmocked/auth/signin.test.ts</code></td>
+          <td><code>tests/mocked/auth/signin-M.test.ts</code></td>
+          <td>Google auth, User DB</td>
+        </tr>
+        <tr>
+          <td><strong>POST /api/auth/signup</strong></td>
+          <td><code>tests/unmocked/auth/signup.test.ts</code></td>
+          <td><code>tests/mocked/auth/signup-M.test.ts</code></td>
+          <td>Google auth, User DB</td>
+        </tr>
+        <tr>
+          <td><strong>DELETE /api/user/profile</strong></td>
+          <td><code>tests/unmocked/user/delete-profile.test.ts</code></td>
+          <td><code>tests/mocked/user/delete-profile-M.test.ts</code></td>
+          <td>User DB</td>
+        </tr>
+        <tr>
+          <td><strong>GET /api/user/profile</strong></td>
+          <td><code>tests/unmocked/user/get-profile.test.ts</code></td>
+          <td><code>tests/mocked/user/get-profile-M.test.ts</code></td>
+          <td>User DB</td>
+        </tr>
+        <tr>
+          <td><strong>GET /api/user/:id</strong></td>
+          <td><code>tests/unmocked/user/get-user-info-by-id.test.ts</code></td>
+          <td><code>tests/mocked/user/get-user-info-by-id-M.test.ts</code></td>
+          <td>User DB</td>
+        </tr>
+        <tr>
+          <td><strong>PUT /api/user/profile</strong></td>
+          <td><code>tests/unmocked/user/update-profile.test.ts</code></td>
+          <td><code>tests/mocked/user/update-profile-M.test.ts</code></td>
+          <td>User DB</td>
+        </tr>
+        <tr>
+          <td><strong>POST /api/media/upload</strong></td>
+          <td></td>
+          <td><code>tests/mocked/media/media-controller-M.test.ts</code></td>
+          <td>User DB</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      Integration tests are located in <code>tests/integration-tests/</code> and
+      test our NHL service, media service, and middleware like errorhandler.
+    </p>
+    <h4 id="212-commit-hash-where-tests-run">
+      2.1.2. Commit Hash Where Tests Run
+    </h4>
+    <p>Commit SHA: <code>dcb18176d01bdcc9733d3ed655c656fea990db2e</code></p>
+    <h4 id="213-explanation-on-how-to-run-the-tests">
+      2.1.3. Explanation on How to Run the Tests
+    </h4>
+    <ol>
+      <li>
+        <p><strong>Clone the Repository</strong>:</p>
+        <ul>
+          <li>
+            Open your terminal and run:
+            <pre><code>git clone https://github.com/cpen-321-rink-rivals/M2-hockey-prediction-app.git
+</code></pre>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <p><strong>Navigate to the backend</strong></p>
+        <pre><code> cd backend
+</code></pre>
+      </li>
+      <li>
+        <p>Run the tests with coverage</p>
+        <pre><code>  npm test -- --coverage
+</code></pre>
+      </li>
+    </ol>
+    <h3 id="22-github-actions-configuration-location">
+      2.2. GitHub Actions Configuration Location
+    </h3>
+    <p><code>~/.github/workflows/backend-tests.yml</code></p>
+    <h3 id="23-jest-coverage-report-screenshots-for-tests-without-mocking">
+      2.3. Jest Coverage Report Screenshots for Tests Without Mocking
+    </h3>
+    <p>
+      <img
+        src="/Users/sylvestereley/Documents/GitHub/M2-hockey_prediction-app/documentation/images/jest-coverage-without-mocking.png"
+        alt="Jest Coverage Without Mocking"
+      />
+    </p>
+    <h3 id="24-jest-coverage-report-screenshots-for-tests-with-mocking">
+      2.4. Jest Coverage Report Screenshots for Tests With Mocking
+    </h3>
+    <p>
+      <img
+        src="/Users/sylvestereley/Documents/GitHub/M2-hockey_prediction-app/documentation/images/jest-coverage-with-mocking.png"
+        alt="Jest Coverage With Mocking"
+      />
+    </p>
+    <h3
+      id="25-jest-coverage-report-screenshots-for-both-tests-with-and-without-mocking"
+    >
+      2.5. Jest Coverage Report Screenshots for Both Tests With and Without
+      Mocking
+    </h3>
+    <h4
+      id="important---due-to-our-reduced-scope-we-have-not-achieved-100--coverage-we-have-left-out-the-testing-of-our-challenges-feature-this-is-the-reason-we-do-not-acheive-full-coverage-in-the-following-files"
+    >
+      IMPORTANT - due to our reduced scope we have not achieved 100 % coverage.
+      We have left out the testing of our challenges feature. This is the reason
+      we do not acheive full coverage in the following files:
+    </h4>
+    <ul>
+      <li>challenges.controller.ts</li>
+      <li>challenges.model.ts</li>
+      <li>socket.service.ts</li>
+      <li>socket.events.ts</li>
+      <li>gameStatusSync.job.ts</li>
+    </ul>
+    <p>
+      The sockets are only used in our challenges feature as well as the game
+      status sync that runs every minute and update challenge statuses in the
+      backend. Line 9 in storage.ts is not covered as well, as it is only active
+      on the first built of the server where no IMAGES_DIR has been created. It
+      is not really part of running the app. And some lines in index.ts and
+      database.ts are not covered as well, as you cannot really test without the
+      app initialized or if the database disconnects.
+    </p>
+    <p>
+      <img
+        src="/Users/sylvestereley/Documents/GitHub/M2-hockey_prediction-app/documentation/images/jest-coverage-both.png"
+        alt="Jest Coverage Combined"
+      />
+    </p>
+    <hr />
+    <h2 id="3-back-end-test-specification-tests-of-non-functional-requirements">
+      3. Back-end Test Specification: Tests of Non-Functional Requirements
+    </h2>
+    <h4
+      id="this-part-of-the-testing-was-skipped-due-to-reduced-team-sized-as-discussed-with-the-professor"
+    >
+      This part of the testing was skipped due to reduced team sized as
+      discussed with the professor
+    </h4>
+    <hr />
+    <h2 id="4-front-end-test-specification">4. Front-end Test Specification</h2>
+    <h3 id="41-location-in-git-of-front-end-test-suite">
+      4.1. Location in Git of Front-end Test Suite:
+    </h3>
+    <p>
+      <code>frontend/app/src/androidTest/java/com/cpen321/usermanagement</code>
+    </p>
+    <h3 id="42-tests">4.2. Tests</h3>
+    <p><strong>Setup instructions</strong></p>
+    <ol>
+      <li>
+        Sign in to the app using both test gmail accounts found in
+        frontend/app/src/androidTest/java/com/cpen321/usermanagement/E2ETests/E2Etests.kt
+      </li>
+      <li>
+        Ensure both accounts have no pre-existing friends or bingo tickets. If
+        there are, delete them.
+      </li>
+      <li>Press the button in E2Etests.kt to run 'E2Etests'</li>
+    </ol>
+    <ul>
+      <li>
+        <p><strong>Friends feature tests</strong></p>
+        <ul>
+          <li><strong>Expected Behaviors:</strong></li>
+        </ul>
+      </li>
+    </ul>
+    <table>
+      <thead>
+        <tr>
+          <th><strong>Scenario Steps</strong></th>
+          <th><strong>Test Case Steps</strong></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Send friend request</strong></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>1. User 2 opens the app and signs in.</td>
+          <td>Call <code>signIn(EMAIL_2)</code>. Wait for UI to settle.</td>
+        </tr>
+        <tr>
+          <td>2. The app shows the main screen.</td>
+          <td>
+            Wait until node with tag
+            <code>&quot;nav_friends&quot;</code> exists.
+          </td>
+        </tr>
+        <tr>
+          <td>3. User 2 navigates to the Friends screen.</td>
+          <td>
+            Click node with tag <code>&quot;nav_friends&quot;</code>. Wait until
+            <code>&quot;friendsSectionHeader&quot;</code> exists.
+          </td>
+        </tr>
+        <tr>
+          <td>4. The app displays User 2’s friend code.</td>
+          <td>
+            Read text from node <code>&quot;friendCodeText&quot;</code> using
+            <code>SemanticsProperties.Text</code>.
+          </td>
+        </tr>
+        <tr>
+          <td>5. User 2 logs out.</td>
+          <td>
+            Click <code>&quot;nav_profile&quot;</code>, then
+            <code>&quot;signOutButton&quot;</code>. Wait until
+            <code>&quot;signinButton&quot;</code> exists.
+          </td>
+        </tr>
+        <tr>
+          <td>6. User 1 opens the app and signs in.</td>
+          <td>Call <code>signIn(EMAIL_1)</code>.</td>
+        </tr>
+        <tr>
+          <td>7. User 1 navigates to the Friends screen.</td>
+          <td>
+            Click <code>&quot;nav_friends&quot;</code>. Wait until
+            <code>&quot;noFriendsText&quot;</code> exists.
+          </td>
+        </tr>
+        <tr>
+          <td>8. The app shows the empty friends state.</td>
+          <td>Assert <code>&quot;noFriendsText&quot;</code> exists.</td>
+        </tr>
+        <tr>
+          <td>9. User 1 enters User 2’s friend code.</td>
+          <td>
+            Perform text input into
+            <code>&quot;addFriendInput&quot;</code> using the captured code.
+          </td>
+        </tr>
+        <tr>
+          <td>10. User 1 sends the friend request.</td>
+          <td>
+            Click <code>&quot;sendFriendRequestButton&quot;</code> and wait.
+          </td>
+        </tr>
+        <tr>
+          <td>11. User 1 logs out.</td>
+          <td>
+            Click <code>&quot;nav_profile&quot;</code>, then
+            <code>&quot;signOutButton&quot;</code>. Wait until
+            <code>&quot;signinButton&quot;</code> exists.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Accept friend request</strong></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>12. User 2 signs in again.</td>
+          <td>Call <code>signIn(EMAIL_2)</code>.</td>
+        </tr>
+        <tr>
+          <td>13. User 2 navigates to the Friends screen.</td>
+          <td>
+            Click <code>&quot;nav_friends&quot;</code>. Wait until
+            <code>&quot;pendingRequestRow&quot;</code> exists.
+          </td>
+        </tr>
+        <tr>
+          <td>14. The app displays User 1’s pending friend request.</td>
+          <td>
+            Assert node <code>&quot;pendingRequestRow&quot;</code> exists.
+          </td>
+        </tr>
+        <tr>
+          <td>15. User 2 accepts the friend request.</td>
+          <td>
+            Click <code>&quot;acceptFriendRequestButton&quot;</code>. Wait until
+            <code>&quot;friendRow&quot;</code> exists.
+          </td>
+        </tr>
+        <tr>
+          <td>16. User 2 logs out again.</td>
+          <td>
+            Click <code>&quot;nav_profile&quot;</code> →
+            <code>&quot;signOutButton&quot;</code>. Wait until
+            <code>&quot;signinButton&quot;</code> exists.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>View friends</strong></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>17. User 1 signs in again.</td>
+          <td>Call <code>signIn(EMAIL_1)</code>.</td>
+        </tr>
+        <tr>
+          <td>18. User 1 navigates back to the Friends screen.</td>
+          <td>
+            Click <code>&quot;nav_friends&quot;</code>. Wait until
+            <code>&quot;friendRow&quot;</code> exists.
+          </td>
+        </tr>
+        <tr>
+          <td>19. The app displays User 2 as a friend.</td>
+          <td>Assert <code>&quot;friendRow&quot;</code> is present.</td>
+        </tr>
+        <tr>
+          <td><strong>Remove friend</strong></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>20. User 1 removes User 2 from their friends list.</td>
+          <td>
+            Click <code>&quot;removeFriendButton&quot;</code> (using
+            <code>useUnmergedTree = true</code>).
+          </td>
+        </tr>
+        <tr>
+          <td>21. The app updates the list to empty state.</td>
+          <td>Wait until <code>&quot;noFriendsText&quot;</code> exists.</td>
+        </tr>
+        <tr>
+          <td>22. User 1 logs out.</td>
+          <td>
+            Click <code>&quot;nav_profile&quot;</code> →
+            <code>&quot;signOutButton&quot;</code>.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <ul>
+      <li>
+        <p><strong>Bingo ticket feature tests</strong></p>
+        <ul>
+          <li>
+            <p><strong>Expected Behaviors:</strong></p>
+            <table>
+              <thead>
+                <tr>
+                  <th><strong>Scenario Steps</strong></th>
+                  <th><strong>Test Case Steps</strong></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Create ticket</strong></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>1. User navigates to the Tickets screen.</td>
+                  <td>Click node with tag <code>nav_tickets</code>.</td>
+                </tr>
+                <tr>
+                  <td>2. App shows the empty tickets state.</td>
+                  <td>
+                    Assert that a node with tag
+                    <code>emptyAddTicketButton</code> exists.
+                  </td>
+                </tr>
+                <tr>
+                  <td>3. User presses “Add Ticket”.</td>
+                  <td>Click node with tag <code>addTicketButton</code>.</td>
+                </tr>
+                <tr>
+                  <td>4. App displays ticket creation screen.</td>
+                  <td>
+                    Assert node with tag
+                    <code>ticketNameTextField</code> exists.
+                  </td>
+                </tr>
+                <tr>
+                  <td>5. User enters a ticket name.</td>
+                  <td>
+                    Input <code>&quot;MyTestTicket&quot;</code> into node with
+                    tag <code>ticketNameTextField</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>6. User selects a game from dropdown.</td>
+                  <td>
+                    Click node with tag <code>gameDropdown</code>, wait for the
+                    dropdown items, then click the first node whose tag starts
+                    with <code>gameDropdownItem_</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>7. User fills all bingo squares by selecting events.</td>
+                  <td>
+                    For indices 0–8: click node <code>bingoSquare_i</code>, wait
+                    for event picker, click first item with tag prefix
+                    <code>eventPickerItem_</code>, then wait for creation screen
+                    to reappear.
+                  </td>
+                </tr>
+                <tr>
+                  <td>8. User presses “Create Ticket”.</td>
+                  <td>Click node with tag <code>createTicketButton</code>.</td>
+                </tr>
+                <tr>
+                  <td><strong>View tickets</strong></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>
+                    9. App shows the ticket list with the newly created ticket.
+                  </td>
+                  <td>
+                    Wait for a node whose tag starts with
+                    <code>tickets_section_header_</code>, then expand the first
+                    such node.
+                  </td>
+                </tr>
+                <tr>
+                  <td>10. User expands the ticket section.</td>
+                  <td>
+                    Click the first node returned by
+                    <code
+                      >onAllNodes(hasTestTagPrefix(&quot;tickets_section_header_&quot;))</code
+                    >.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Delete ticket</strong></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>11. User presses delete on the created ticket.</td>
+                  <td>
+                    Identify the created ticket using its tag prefix
+                    <code>ticket_card_</code>, extract ID, then click node with
+                    tag <code>ticket_delete_button_&lt;id&gt;</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    12. App removes the ticket and returns to empty state.
+                  </td>
+                  <td>
+                    Assert node with tag
+                    <code>emptyAddTicketButton</code> exists again.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <h2 id="test-results">
+      <strong>test results:</strong>
+      <img
+        src="/Users/sylvestereley/Documents/GitHub/M2-hockey_prediction-app/documentation/images/FrontendTestResults"
+        alt="Frontend test results"
+      />
+    </h2>
+    <h2 id="5-automated-code-review-results">
+      5. Automated Code Review Results
+    </h2>
+    <h4
+      id="this-part-of-the-testing-was-skipped-due-to-reduced-team-sized-as-discussed-with-the-professor-1"
+    >
+      This part of the testing was skipped due to reduced team sized as
+      discussed with the professor
+    </h4>
+    <hr />
+  </body>
+</html>

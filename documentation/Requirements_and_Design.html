@@ -1,0 +1,1865 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Requirements and Design</title>
+    <style>
+      /* From extension vscode.github */
+      /*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+      .vscode-dark img[src$="\#gh-light-mode-only"],
+      .vscode-light img[src$="\#gh-dark-mode-only"],
+      .vscode-high-contrast:not(.vscode-high-contrast-light)
+        img[src$="\#gh-light-mode-only"],
+      .vscode-high-contrast-light img[src$="\#gh-dark-mode-only"] {
+        display: none;
+      }
+    </style>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css"
+    />
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI",
+          system-ui, "Ubuntu", "Droid Sans", sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+    </style>
+    <style>
+      .task-list-item {
+        list-style-type: none;
+      }
+
+      .task-list-item-checkbox {
+        margin-left: -20px;
+        vertical-align: middle;
+        pointer-events: none;
+      }
+    </style>
+    <style>
+      :root {
+        --color-note: #0969da;
+        --color-tip: #1a7f37;
+        --color-warning: #9a6700;
+        --color-severe: #bc4c00;
+        --color-caution: #d1242f;
+        --color-important: #8250df;
+      }
+    </style>
+    <style>
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --color-note: #2f81f7;
+          --color-tip: #3fb950;
+          --color-warning: #d29922;
+          --color-severe: #db6d28;
+          --color-caution: #f85149;
+          --color-important: #a371f7;
+        }
+      }
+    </style>
+    <style>
+      .markdown-alert {
+        padding: 0.5rem 1rem;
+        margin-bottom: 16px;
+        color: inherit;
+        border-left: 0.25em solid #888;
+      }
+
+      .markdown-alert > :first-child {
+        margin-top: 0;
+      }
+
+      .markdown-alert > :last-child {
+        margin-bottom: 0;
+      }
+
+      .markdown-alert .markdown-alert-title {
+        display: flex;
+        font-weight: 500;
+        align-items: center;
+        line-height: 1;
+      }
+
+      .markdown-alert .markdown-alert-title .octicon {
+        margin-right: 0.5rem;
+        display: inline-block;
+        overflow: visible !important;
+        vertical-align: text-bottom;
+        fill: currentColor;
+      }
+
+      .markdown-alert.markdown-alert-note {
+        border-left-color: var(--color-note);
+      }
+
+      .markdown-alert.markdown-alert-note .markdown-alert-title {
+        color: var(--color-note);
+      }
+
+      .markdown-alert.markdown-alert-important {
+        border-left-color: var(--color-important);
+      }
+
+      .markdown-alert.markdown-alert-important .markdown-alert-title {
+        color: var(--color-important);
+      }
+
+      .markdown-alert.markdown-alert-warning {
+        border-left-color: var(--color-warning);
+      }
+
+      .markdown-alert.markdown-alert-warning .markdown-alert-title {
+        color: var(--color-warning);
+      }
+
+      .markdown-alert.markdown-alert-tip {
+        border-left-color: var(--color-tip);
+      }
+
+      .markdown-alert.markdown-alert-tip .markdown-alert-title {
+        color: var(--color-tip);
+      }
+
+      .markdown-alert.markdown-alert-caution {
+        border-left-color: var(--color-caution);
+      }
+
+      .markdown-alert.markdown-alert-caution .markdown-alert-title {
+        color: var(--color-caution);
+      }
+    </style>
+  </head>
+  <body class="vscode-body vscode-light">
+    <h1 id="requirements-and-design">Requirements and Design</h1>
+    <h2 id="1-change-history">1. Change History</h2>
+    <table>
+      <thead>
+        <tr>
+          <th><strong>Change Date</strong></th>
+          <th><strong>Modified Sections</strong></th>
+          <th><strong>Rationale</strong></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>24. Oct.</td>
+          <td>Whole project</td>
+          <td>
+            Our project has unfortunately been downscaled a bit due to a
+            changing team size. This has mostly influenced the live event
+            updating feature that we pivoted to a feature of the user filling
+            out the bingo squares instead. This automatic update of filling out
+            tickets is something that is time consuming but can be fit into our
+            architecture as we already have the backend live game sync up a dn
+            running and we would focus on this as the next milestone in further
+            development of the project.
+          </td>
+        </tr>
+        <tr>
+          <td>25. Oct.</td>
+          <td>4.1</td>
+          <td>
+            Added missing Interfaces and split Friends component into its own
+            for better seperation
+          </td>
+        </tr>
+        <tr>
+          <td>25. Oct</td>
+          <td>4.4</td>
+          <td>Added new frameworks/libraries</td>
+        </tr>
+        <tr>
+          <td>25. Oct</td>
+          <td>4.5</td>
+          <td>Updated Backend dependicy diagram with new dependencies</td>
+        </tr>
+        <tr>
+          <td>25. Oct</td>
+          <td>3.5 use case 1</td>
+          <td>
+            Updated use case from creating the ticket before the events were
+            selected to only creating the ticket after 9 events are chosen as we
+            dont want empty ticekts.
+          </td>
+        </tr>
+        <tr>
+          <td>25. Oct</td>
+          <td>3.5 use case 2</td>
+          <td>
+            Updated Use case 2 from choosing only a ticket to also choosing a
+            game as this was easier to implement
+          </td>
+        </tr>
+        <tr>
+          <td>25. Oct</td>
+          <td>3.5 use case 4</td>
+          <td>
+            We had to redefine use case 4 as we had to lower the project scope
+            due to time constraints. We therefore do not have rankings, but
+            instead we have a viewing of each persons ticket so events can be
+            handled manually by the user.
+          </td>
+        </tr>
+        <tr>
+          <td>25. Oct</td>
+          <td>3.5 use case 5</td>
+          <td>
+            We changed the way to add friends to be with a friend code because
+            of easier implementation and time constraints
+          </td>
+        </tr>
+        <tr>
+          <td>25. Oct</td>
+          <td>3.4 feature 5, 4.3</td>
+          <td>As mentioned before, we will not have rankings.</td>
+        </tr>
+        <tr>
+          <td>25. Oct</td>
+          <td>3.7 Non. Func. Requirement 2</td>
+          <td>
+            Updated the non-functional requirement to have more of a
+            justification
+          </td>
+        </tr>
+        <tr>
+          <td>26. Oct</td>
+          <td>3.7 Non. Func. Requirement 1</td>
+          <td>
+            Due to downsizing of the project, we have changes the non-functional
+            req. to only involve the update of game status instead of all game
+            events.
+          </td>
+        </tr>
+        <tr>
+          <td>26. Oct.</td>
+          <td>4.7</td>
+          <td>Added description of testing of NF req. 1 &amp; 2</td>
+        </tr>
+        <tr>
+          <td>4. Nov</td>
+          <td>4.1</td>
+          <td>
+            Removed unused method from component interface, getPollingInterval
+          </td>
+        </tr>
+        <tr>
+          <td>9. Nov</td>
+          <td>3.1, 3.4</td>
+          <td>
+            Tickets can now update based on the real game data. This is now
+            reflected
+          </td>
+        </tr>
+        <tr>
+          <td>9. Nov</td>
+          <td>3.1, 3.4, 3.5</td>
+          <td>Updated challenge requirements to reflect what is in our app</td>
+        </tr>
+        <tr>
+          <td>26. Nov</td>
+          <td>3.1, Manage challenges</td>
+          <td>Updated feature description to reflect our app</td>
+        </tr>
+        <tr>
+          <td>26. Nov</td>
+          <td>3.3</td>
+          <td>Added actors to the actors list.</td>
+        </tr>
+        <tr>
+          <td>26. Nov</td>
+          <td>3.3, 3.4</td>
+          <td>
+            Removed the view challenges feature as it was vague and really a
+            part of manage challenges. Edited the use case diagram
+          </td>
+        </tr>
+        <tr>
+          <td>26. Nov</td>
+          <td>3.5</td>
+          <td>
+            Revised the formal use case specifications to follow a proper
+            user/system sequence. Changed &quot;accept challenge&quot; use case
+            to &quot;Join challenge&quot; as changed in 3.3 and 3.4
+          </td>
+        </tr>
+        <tr>
+          <td>26. Nov</td>
+          <td>3.5</td>
+          <td>More revisions to formal use case specifications</td>
+        </tr>
+        <tr>
+          <td>27. Nov</td>
+          <td>3.7, 4.1</td>
+          <td>
+            Added missing media upload to the users interface and added a
+            justification to NFR 1
+          </td>
+        </tr>
+        <tr>
+          <td>28. Nov</td>
+          <td>3.5</td>
+          <td>
+            Changed create ticket formal use case to be consistent with actual
+            test
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <hr />
+    <h2 id="2-project-description">2. Project Description</h2>
+    <p>
+      Our app is a social points game based on real life ice hockey games. The
+      purpose of the game is to predict events and score bingos before your
+      opponents. You play against each other with self made bingo tickets. These
+      are composed of a 3x3 grid where you can pick an event for each box.
+      Players should pick the events they find most likely and can win by
+      getting bingos, meaning 3 in a row.
+    </p>
+    <hr />
+    <h2 id="3-requirements-specification">3. Requirements Specification</h2>
+    <h3 id="31-list-of-features"><strong>3.1. List of Features</strong></h3>
+    <p>
+      <strong>1. Sign up and authentication:</strong> Users need to sign in to
+      use the app. New users need to sign up before they sign in. Signed in
+      users can sign out or delete their account.
+    </p>
+    <p>
+      <strong>2. Manage friends:</strong> A user can send friend requests to
+      other users. Other users may accept or decline friend requests. If a user
+      accepts a friend request, the user will become a friend and appear in the
+      users friend list. Users can also delete friends.
+    </p>
+    <p>
+      <strong>3. Manage bingo tickets:</strong> Users can create bingo tickets
+      for upcoming hockey games. One game can be chosen for one ticket but
+      multiple tickets may be made for one game. The user can fill their bingo
+      ticket by selecting 9 events from a list and placing them in a 3x3 grid.
+      When the bingo ticket is complete, the user can save it and view it in a
+      tickets list. As the real life hockey game starts, the squares are filled
+      in when the events are met (eg. VAN scores 3+ times).
+    </p>
+    <p>
+      <strong>4. Manage challenges:</strong> Users can create, delete, join,
+      decline and leave challenges. The challenge will have a unique game
+      related to it, and the challenge members will each have a ticket in the
+      challenge for the same game. One ticket may be used for one challenge but
+      multiple challenges may use the same ticket. The user who creates the
+      challenge will become the challenge owner and can invite other players
+      from their friends list. Users can view a specific challenge and see the
+      state of all bingo tickets involved in the challenge.
+    </p>
+    <h3 id="32-use-case-diagram"><strong>3.2. Use Case Diagram</strong></h3>
+    <p>
+      <img
+        src="/Users/sylvestereley/Documents/GitHub/M2-hockey_prediction-app/documentation/images/UseCaseDiagram.png"
+        alt="Use case diagram"
+      />
+    </p>
+    <h3 id="33-actors-description"><strong>3.3. Actors Description</strong></h3>
+    <ol>
+      <li>
+        <strong>[General user]</strong>: The general user can use all the core
+        functionalities such as signing up, managing friends and bingo tickets,
+        and accepting, declining and sending challenges.
+      </li>
+      <li>
+        <strong>[The challenge owner]</strong>: The challenge owner is a general
+        user with the ability to close the challenges that are owned.
+      </li>
+      <li>
+        <strong>[The challenge member]</strong>: The challenge member is a
+        general user with the ability to leave challenges.
+      </li>
+      <li>
+        <strong>[Live NHL statistics service]</strong>: The NHL statistics
+        service is used to get the schedule, scores and game events.
+      </li>
+      <li>
+        <strong>[Google authentication service]</strong>: The google
+        authentication service is used to authenticate users.
+      </li>
+    </ol>
+    <h3 id="34-use-case-description">
+      <strong>3.4. Use Case Description</strong>
+    </h3>
+    <ul>
+      <li>Use cases for feature 1: [Sign up and authentication]</li>
+    </ul>
+    <ol>
+      <li>
+        <strong>[Sign up]</strong>: All users can sign up to create a profile.
+      </li>
+      <li><strong>[Log in]</strong>: All users can log in to their profile.</li>
+      <li>
+        <strong>[Log out]</strong>: All users can log out of their profile.
+      </li>
+      <li>
+        <strong>[Delete account]</strong>: All users can delete their account.
+      </li>
+      <li>
+        <strong>[Edit account]</strong>: All users can change their username,
+        bio, and profile picture.
+      </li>
+    </ol>
+    <ul>
+      <li>Use cases for feature 2: [Manage friends]</li>
+    </ul>
+    <ol>
+      <li>
+        <strong>[Send friend request]</strong>: All users can request other
+        users to become friends.
+      </li>
+      <li>
+        <strong>[Accept friend request]</strong>: All users can accept friend
+        requests.
+      </li>
+      <li>
+        <strong>[Reject friend request]</strong>: All users can reject friend
+        requests.
+      </li>
+      <li>
+        <strong>[Remove friend]</strong>: All users can remove existing friends.
+      </li>
+      <li>
+        <strong>[View friends]</strong>: All users can see a list of their
+        current friends.
+      </li>
+    </ol>
+    <ul>
+      <li>Use cases for feature 3: [Manage bingo tickets]</li>
+    </ul>
+    <ol>
+      <li>
+        <strong>[Create a bingo ticket]</strong>: All users can create a bingo
+        ticket for an upcoming game by filling out a 3x3 grid with events from
+        an event list and saving when done.
+      </li>
+      <li>
+        <strong>[Delete bingo ticket]</strong>: All users can delete bingo
+        tickets, if no challenges refer to this ticket.
+      </li>
+      <li>
+        <strong>[View bingo tickets]</strong>: All users can view a list of
+        their bingo tickets.
+      </li>
+    </ol>
+    <ul>
+      <li>Use cases for feature 4: [Manage challenges]</li>
+    </ul>
+    <ol>
+      <li>
+        <strong>[Create challenge]</strong>: The user can use a bingo ticket to
+        challenge one or several friends to create their own bingo ticket on the
+        specific match and see who gets the highest score.
+      </li>
+      <li>
+        <strong>[Delete challenge]</strong>: The challenge owner can delete a
+        challenge whereby the challenge will disappear for all members of the
+        challenge.
+      </li>
+      <li>
+        <strong>[Join challenge]</strong>: The user can receive invites and
+        accept them by selecting or creating a bingo ticket for the specific
+        match they have been invited to.
+      </li>
+      <li>
+        <strong>[Decline challenge]</strong>: The user can decline any
+        challenge.
+      </li>
+      <li>
+        <strong>[Leave challenge]</strong>: The challenge member can leave a
+        challenge.
+      </li>
+      <li>
+        <strong>[View challenge details]</strong>: All users can see current
+        participants and their bingo tickets as well as the current points for
+        each ticket.
+      </li>
+    </ol>
+    <h3 id="35-formal-use-case-specifications-5-most-major-use-cases">
+      <strong
+        >3.5. Formal Use Case Specifications (5 Most Major Use Cases)</strong
+      >
+    </h3>
+    <p><a name="uc1"></a></p>
+    <h4 id="use-case-1-create-a-bingo-ticket">
+      Use Case 1: [Create a Bingo Ticket]
+    </h4>
+    <p>
+      <strong>Description</strong>: A user chooses 9 events for an upcoming NHL
+      game from a given list and places them in a 3×3 grid creating a bingo
+      ticket.
+    </p>
+    <p><strong>Primary actor(s)</strong>: User, NHL statistics service</p>
+    <p><strong>Main success scenario</strong>:</p>
+    <ol>
+      <li>The user navigates to the Tickets screen.</li>
+      <li>The user presses &quot;add ticket&quot;.</li>
+      <li>The system displays ticket creation screen.</li>
+      <li>The user enters a ticket name.</li>
+      <li>The user selects a game from dropdown.</li>
+      <li>The user fills all bingo squares by selecting events.</li>
+      <li>The user presses “Create Ticket”.</li>
+      <li>The system shows the ticket list with the newly created ticket.</li>
+    </ol>
+    <p><a name="uc2"></a></p>
+    <h4 id="use-case-2-create-challenge">Use Case 2: [Create Challenge]</h4>
+    <p>
+      <strong>Description</strong>: A user creates a challenge for an upcoming
+      hockey game.
+    </p>
+    <p><strong>Primary actor(s)</strong>: User</p>
+    <p><strong>Main success scenario</strong>:</p>
+    <ol>
+      <li>
+        The user selects a game (from a list fetched by NHL statistics service)
+        that they want to make a challenge on.
+      </li>
+      <li>The system allows the user to choose a ticket.</li>
+      <li>The user selects a bingo ticket that is made on the same game.</li>
+      <li>
+        The system provides a default title to the challenge based on the game.
+      </li>
+      <li>The user selects one or more friends to invite.</li>
+      <li>The system allows the user to create challenge.</li>
+      <li>The user creates the challenge.</li>
+      <li>
+        The system notifies the invited friends of the challenge and shows the
+        challenge in the list of pending challenges.
+      </li>
+    </ol>
+    <p><strong>Failure scenario(s)</strong>:</p>
+    <ul>
+      <li>
+        6a. No friends, no game or no ticket is selected.
+        <ul>
+          <li>6a1. The create button is greyed out and cannot be clicked.</li>
+        </ul>
+      </li>
+    </ul>
+    <h4 id="use-case-3-join-challenge">Use Case 3: [Join Challenge]</h4>
+    <p>
+      <strong>Description</strong>: A user receives invitation to join a
+      challenge. They can accept by selecting a bingo ticket for the specified
+      game.
+    </p>
+    <p><strong>Primary actor(s)</strong>: User</p>
+    <p><strong>Main success scenario</strong>:</p>
+    <ol>
+      <li>The user views the details of a pending challenge.</li>
+      <li>
+        The system shows the details of challenge and prompts the user to
+        decline or select a bingo ticket of their own to join the challenge.
+      </li>
+      <li>
+        The user selects an existing bingo ticket for the specified game and
+        joins the challenge.
+      </li>
+      <li>
+        The system moves the user from the list of invited users to the list of
+        challenge partcipants.
+      </li>
+    </ol>
+    <p><strong>Failure scenario(s)</strong>:</p>
+    <ul>
+      <li>
+        2a. The user does not have any bingo tickets for the specified game
+        <ul>
+          <li>
+            2a1. The system prompts the user to create a bingo ticket for the
+            specified game.
+          </li>
+          <li>2a2. The user creates a bingo ticket for the specified game.</li>
+          <li>2a3. The user tries to join the challenge again.</li>
+        </ul>
+      </li>
+    </ul>
+    <h4 id="use-case-4-view-challenge-details">
+      Use Case 4: [View challenge details]
+    </h4>
+    <p>
+      <strong>Description</strong>: A user selects a challenge and views all the
+      participatnts and their bingo tickets to see who predicted the most
+      events.
+    </p>
+    <p><strong>Primary actor(s)</strong>: User, NHL statistics service</p>
+    <p><strong>Main success scenario</strong>:</p>
+    <ol>
+      <li>The user clicks a challenge.</li>
+      <li>
+        The system displays the challenge details with title, game state,
+        participants and their bingo tickets automatically filled out based on
+        the real game statistics fetched by the NHL statistics service.
+        <strong>Failure scenario(s)</strong>:
+      </li>
+    </ol>
+    <ul>
+      <li>
+        2a. One of the participants has deleted their account.
+        <ul>
+          <li>
+            2a1. The system displays &quot;User deleted&quot; instead of the
+            name of the participant.
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <h4 id="use-case-5-send-friend-request">
+      Use Case 5: [Send friend request]
+    </h4>
+    <p>
+      <strong>Description</strong>: A user finds another user via their friend
+      code and requests to become friends.
+    </p>
+    <p><strong>Primary actor(s)</strong>: User</p>
+    <p><strong>Main success scenario</strong>:</p>
+    <ol>
+      <li>The user navigates to their list of current friends.</li>
+      <li>
+        The system displays a list of their friends and the friend code needed
+        to be found as a friend.
+      </li>
+      <li>
+        The user types the friend code of another user in a form and clicks to
+        add friend.
+      </li>
+      <li>
+        The system notifies the user that the request has been successfully
+        sent.
+      </li>
+    </ol>
+    <p><strong>Failure scenario(s)</strong>:</p>
+    <ul>
+      <li>
+        <p>3a. The user enters an invalid friendCode</p>
+        <ul>
+          <li>
+            3a1. The system displays a message: “Please enter a valid friend
+            code.”
+          </li>
+        </ul>
+      </li>
+      <li>
+        <p>3b. There is no user associated with the friend code.</p>
+        <ul>
+          <li>
+            3b1. The system notifies the user that no user is associated with
+            that email.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <p>3c. The user associated with the friend code is already a friend.</p>
+        <ul>
+          <li>
+            3c1. The system notifies the user that the accounts are already
+            friends.
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <h3 id="36-screen-mock-ups"><strong>3.6. Screen Mock-ups</strong></h3>
+    <p>
+      <img
+        src="/Users/sylvestereley/Documents/GitHub/M2-hockey_prediction-app/documentation/images/user-journey-sccreen-mockups.png"
+        alt="Screen Mock-ups"
+      />
+    </p>
+    <h3 id="37-non-functional-requirements">
+      <strong>3.7. Non-Functional Requirements</strong>
+    </h3>
+    <p><a name="nfr1"></a></p>
+    <ol>
+      <li>
+        <p><strong>[Live updates]</strong></p>
+        <ul>
+          <li>
+            <strong>Description</strong>: Bingo ticket status should update
+            within 1 min of the event occurring.
+          </li>
+          <li>
+            <strong>Justification</strong>: The element of live interactivity is
+            very important as the game depends on a live hockey event, and the
+            game needs to be updated quickly for the user to follow the state of
+            the challenge. We choose one minute as this is the maximum delay
+            users are expecting for simple problems that they expect the
+            computer to solve.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <p><strong>[Seamless bingo ticket building]</strong></p>
+        <ul>
+          <li>
+            <strong>Description</strong>: When creating a bingo ticket the
+            system should be able to find events in less than 1 s.
+          </li>
+          <li>
+            <strong>Justification</strong>: The core feature of our app is
+            building bingo tickets and ideally this is where the user will spend
+            the most time. Studies and UX standards indicate that response times
+            under 1 second are perceived as instantaneous, maintaining the
+            user’s sense of flow and engagement. This ensures users can quickly
+            iterate and build tickets without frustration or cognitive
+            interruption.
+          </li>
+        </ul>
+      </li>
+    </ol>
+    <hr />
+    <h2 id="4-designs-specification">4. Designs Specification</h2>
+    <h3 id="41-main-components"><strong>4.1. Main Components</strong></h3>
+    <h2 id="41-main-components-1">4.1. Main Components</h2>
+    <ol>
+      <li>
+        <strong>[Users]</strong>
+        <ul>
+          <li>
+            <strong>Purpose</strong>: Handles user profile management including
+            viewing, updating, and deleting user accounts.
+          </li>
+          <li>
+            <strong>Interfaces</strong>:
+            <ol>
+              <li>
+                <strong>HTTP/REST Interfaces</strong> (Frontend → Backend):
+                <ul>
+                  <li>
+                    <code>GET /api/user/profile</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>
+                      </li>
+                      <li><strong>Returns</strong>: <code>User</code></li>
+                      <li>
+                        <strong>Purpose</strong>: Retrieves the authenticated
+                        user's complete profile data including name, email, bio,
+                        and profile picture.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>GET /api/user/:id</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>userId: String</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>: <code>PublicUserInfo</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Fetches public profile
+                        information for any user by their ID (name, profile
+                        picture, friend code).
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>PUT /api/user/profile</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code
+                          >{ name?: String, bio?: String, profilePictureURL?:
+                          String }</code
+                        >
+                      </li>
+                      <li><strong>Returns</strong>: <code>User</code></li>
+                      <li>
+                        <strong>Purpose</strong>: Updates the authenticated
+                        user's profile fields such as username, bio, or profile
+                        picture URL.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>DELETE /api/user/profile</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>:
+                        <code>{ message: String }</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Permanently deletes the
+                        authenticated user's account and all associated data.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>POST /api/media/upload</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}, media: Image</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>: <code>{ image: String }</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Uploads the profile picture to
+                        the backend.
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <strong>Java-style Interfaces</strong> (Backend Internal):
+                <ul>
+                  <li>
+                    <code>create(userInfo: GoogleUserInfo): User</code>
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Creates a user document in
+                        database with ID.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code
+                      >update(userId: mongoose.Types.ObjectId, user:
+                      Partial&lt;User&gt;): User</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Updates user document in
+                        database with new field values.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>delete(userId: mongoose.Types.ObjectId): void</code>
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Removes user document and
+                        cascades deletion to related data.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>findById(_id: mongoose.Types.ObjectId): User</code>
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Retrieves a user document from
+                        database by ID.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code
+                      >findUserInfoById(userId: string): PublicUserInfo</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Retrieves only public info
+                        from user document from database by ID.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>findByGoogleId(googleId: String): User</code>
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Finds a user account by their
+                        Google OAuth ID.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>findByFriendCode(code: String): User</code>
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Finds a user account by their
+                        friend code.
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ol>
+          </li>
+        </ul>
+      </li>
+    </ol>
+    <hr />
+    <ol start="2">
+      <li>
+        <strong>[Friends]</strong>
+        <ul>
+          <li>
+            <strong>Purpose</strong>: Manages friend relationships including
+            sending, accepting, rejecting, and removing friend connections.
+          </li>
+          <li>
+            <strong>Interfaces</strong>:
+            <ol>
+              <li>
+                <strong>HTTP/REST Interfaces</strong> (Frontend → Backend):
+                <ul>
+                  <li>
+                    <code>POST /api/friends/request</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>{ friendCode: String }</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>:
+                        <code>{ message: String }</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Sends a friend request to
+                        another user using their unique friend code.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>POST /api/friends/accept</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>{ requesterId: String }</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>:
+                        <code>{ message: String }</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Accepts a pending incoming
+                        friend request from specified user.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>POST /api/friends/reject</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>{ requesterId: String }</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>:
+                        <code>{ message: String }</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Declines a pending friend
+                        request without establishing connection.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>GET /api/friends/list</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>
+                      </li>
+                      <li><strong>Returns</strong>: <code>Friend[]</code></li>
+                      <li>
+                        <strong>Purpose</strong>: Retrieves the complete list of
+                        all accepted friends with their profile information.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>GET /api/friends/pending</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>:
+                        <code
+                          >{ incoming: PendingRequest[], outgoing:
+                          PendingRequest[] }</code
+                        >
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Lists all incoming and
+                        outgoing pending friend requests.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>DELETE /api/friends/:friendId</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>friendId: String</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>:
+                        <code>{ message: String }</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Removes an existing friend
+                        connection permanently from both users' friend lists.
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <strong>Java-style Interfaces</strong> (Backend Internal):
+                <ul>
+                  <li>
+                    <code
+                      >sendRequest(senderId: String, receiverId: String):
+                      FriendRequest</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Creates a pending friend
+                        request entry in database.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>acceptRequest(requestId: string): FriendRequest</code>
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Sets the friendRequest's
+                        status to accepted in the database.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>rejectRequest(requestId: string: FriendRequest)</code>
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Sets the friendRequest's
+                        status to rejected in the database.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>getFriends(userId: string): FriendRequest[] </code>
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Gets a list of users friends.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code
+                      >removeFriend(userId: string, friendId: string):
+                      FriendRequest</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Deletes friend relationship
+                        from database.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code
+                      >getPendingRequests(userId: string): FriendRequest</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: get all friend requests not
+                        accepted and with the userId as sender or receiver.
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ol>
+          </li>
+        </ul>
+      </li>
+    </ol>
+    <hr />
+    <ol start="3">
+      <li>
+        <p><strong>[Bingo Tickets]</strong></p>
+        <ul>
+          <li>
+            <p>
+              <strong>Purpose</strong>: Handles creation, retrieval, and
+              deletion of bingo tickets for NHL game predictions.
+            </p>
+          </li>
+          <li>
+            <p><strong>Interfaces</strong>:</p>
+            <ol>
+              <li>
+                <p>
+                  <strong>HTTP/REST Interfaces</strong> (Frontend → Backend):
+                </p>
+                <ul>
+                  <li>
+                    <p><code>POST /api/tickets</code></p>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code
+                          >{ userId: String, name: String, game: Game, events:
+                          String[9] }</code
+                        >
+                      </li>
+                      <li>
+                        <strong>Returns</strong>: <code>BingoTicket</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Creates a new bingo ticket
+                        with 9 selected events for a specific NHL game.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <p><code>GET /api/tickets/user/:userId</code></p>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>userId: String</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>: <code>BingoTicket[]</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Retrieves all bingo tickets
+                        created by a specific user, sorted by creation date.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <p><code>GET /api/tickets/:id</code></p>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>ticketId: String</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>: <code>BingoTicket</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Fetches a specific bingo
+                        ticket by its unique ID including all selected events.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <p><code>DELETE /api/tickets/:id</code></p>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>ticketId: String</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>:
+                        <code>{ message: String }</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Deletes a bingo ticket
+                        permanently from the database.
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <p>
+                  <strong>Java-style Interfaces</strong> We do not have internal
+                  backend interactions for tickets as we do for the other
+                  backend components.
+                </p>
+              </li>
+            </ol>
+          </li>
+        </ul>
+      </li>
+    </ol>
+    <hr />
+    <ol start="4">
+      <li>
+        <strong>[Challenges]</strong>
+        <ul>
+          <li>
+            <strong>Purpose</strong>: Manages challenge lifecycle including
+            creation, participation, invitations, and status tracking.
+          </li>
+          <li>
+            <strong>Interfaces</strong>:
+            <ol>
+              <li>
+                <strong>HTTP/REST Interfaces</strong> (Frontend → Backend):
+                <ul>
+                  <li>
+                    <code>GET /api/challenges</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>: <code>Challenge[]</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Retrieves all challenges with
+                        pagination support.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>GET /api/challenges/user</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>:
+                        <code
+                          >{ owned: Challenge[], joined: Challenge[], invited:
+                          Challenge[] }</code
+                        >
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Fetches all challenges where
+                        user is owner, member, or has pending invitation.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>GET /api/challenges/:id</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>challengeId: String</code>
+                      </li>
+                      <li><strong>Returns</strong>: <code>Challenge</code></li>
+                      <li>
+                        <strong>Purpose</strong>: Retrieves detailed information
+                        for a specific challenge including all members and their
+                        tickets.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>GET /api/challenges/game/:gameId</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>gameId: String</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>: <code>Challenge[]</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Fetches all challenges
+                        associated with a specific NHL game.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>POST /api/challenges</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code
+                          >{ title: String, description: String, gameId: String,
+                          invitedUserIds: String[], maxMembers?: Number,
+                          ticketId?: String }</code
+                        >
+                      </li>
+                      <li><strong>Returns</strong>: <code>Challenge</code></li>
+                      <li>
+                        <strong>Purpose</strong>: Creates a new challenge for an
+                        NHL game and sends invitations to specified friends.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>PUT /api/challenges/:id</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>challengeId: String</code>,
+                        <code
+                          >{ title?: String, description?: String, status?:
+                          String, maxMembers?: Number }</code
+                        >
+                      </li>
+                      <li><strong>Returns</strong>: <code>Challenge</code></li>
+                      <li>
+                        <strong>Purpose</strong>: Updates challenge details
+                        (owner only) such as title, description, or member
+                        limit.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>DELETE /api/challenges/:id</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>challengeId: String</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>:
+                        <code>{ message: String }</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Permanently deletes a
+                        challenge and notifies all members (owner only).
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>POST /api/challenges/:id/join</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>challengeId: String</code>,
+                        <code>{ ticketId: String }</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>:
+                        <code>{ message: String }</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Joins user to a challenge with
+                        their selected bingo ticket.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>POST /api/challenges/:id/leave</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>challengeId: String</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>:
+                        <code>{ message: String }</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Removes user from a challenge
+                        if game has not started yet.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>POST /api/challenges/:id/decline</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>challengeId: String</code>
+                      </li>
+                      <li>
+                        <strong>Returns</strong>:
+                        <code>{ message: String }</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Declines a challenge
+                        invitation without joining.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>PATCH /api/challenges/:id/status</code>
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>:
+                        <code>Authorization: Bearer {token}</code>,
+                        <code>challengeId: String</code>,
+                        <code>{ status: String }</code>
+                      </li>
+                      <li><strong>Returns</strong>: <code>Challenge</code></li>
+                      <li>
+                        <strong>Purpose</strong>: Updates challenge status (used
+                        by game sync system for PENDING→ACTIVE→LIVE→FINISHED
+                        transitions).
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <strong>Java-style Interfaces</strong> (Backend Internal):
+                <ul>
+                  <li>
+                    <code
+                      >create(challengeData: CreateChallengeInput, ownerId:
+                      String): Challenge</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Creates new challenge document
+                        with owner automatically added as member.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code
+                      >update(id: string, data: Partial&lt;Challenge&gt;):
+                      Challenge</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Updates challenge document.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>delete(id: string, ownerId: string): void</code>
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: deletes challenge document.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>findById(id: string): Challenge</code>
+                    <ul>
+                      <li><strong>Purpose</strong>: Find a challenge by id.</li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code
+                      >findAll(page: number = 1, limit: number = 10): {
+                      challenges: Challenge[]; total: number }</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Get all challenges paginated
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code
+                      >getUserChallenges(userId: string, status?: string):
+                      Challenge[]</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: gets all challenges that a
+                        user is a part of.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code
+                      >joinChallenge(challengeId: string, userId: string,
+                      ticketId: string): Challenge</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: lets a user join a challenge
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code
+                      >leaveChallenge(challengeId: string, userId: string):
+                      Challenge</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: lets the user leave challenge
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code
+                      >declineInvitation(challengeId: string, userId: string)
+                      Challenge | null</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: lets the user decline the
+                        invitation
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code
+                      >updateStatus(challengeId: string, status: string,
+                      ownerId?: string): Challenge | null</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: updates the challenge status
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>findByGameId(gameId: string): Challenge[]</code>
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: finds all the challenges with
+                        a given gameId
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ol>
+          </li>
+        </ul>
+      </li>
+    </ol>
+    <hr />
+    <ol start="5">
+      <li>
+        <strong>[NHL Service (Game Status Sync)]</strong>
+        <ul>
+          <li>
+            <strong>Purpose</strong>: Fetches, caches, and processes NHL game
+            data from external API for schedule and game status tracking.
+          </li>
+          <li>
+            <strong>Interfaces</strong>:
+            <ol>
+              <li>
+                <strong>Java-style Interfaces</strong> (Backend Internal):
+                <ul>
+                  <li>
+                    <code
+                      >getGameStatus(gameId: String): Promise&lt;GameStatus |
+                      null&gt;</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Fetches current game state
+                        from NHL API schedule endpoint with 30-second caching
+                        for performance, returns game status or falls back to
+                        direct endpoint if not found in schedule.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code
+                      >getGameStatusDirect(gameId: String):
+                      Promise&lt;GameStatus | null&gt;</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Retrieves game state directly
+                        from NHL API game-specific landing endpoint
+                        (<code>/gamecenter/{gameId}/landing</code>) bypassing
+                        schedule lookup.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>isGameLive(gameState: String): boolean</code>
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Determines if a game is
+                        currently in progress by checking if state matches LIVE,
+                        CRIT, or PRE.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>isGameFinished(gameState: String): boolean</code>
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Checks if a game has concluded
+                        by verifying state is OFF or FINAL.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>isGameScheduled(gameState: String): boolean</code>
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Verifies if a game is
+                        scheduled for the future by checking if state is FUT or
+                        SCHEDULED.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>clearCache(gameId?: String): void</code>
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Removes cached game status for
+                        specific game ID or clears entire cache if no ID
+                        provided.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>getTimeUntilStart(startTimeUTC: String): number</code>
+                    <ul>
+                      <li>
+                        <strong>Purpose</strong>: Calculates milliseconds until
+                        game starts from UTC timestamp, returns negative value
+                        if game already started.
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <strong>HTTP/REST Interfaces</strong> (Backend → External NHL
+                API):
+                <ul>
+                  <li>
+                    <code>GET https://api-web.nhle.com/v1/schedule/now</code>
+                    <ul>
+                      <li>
+                        <strong>Returns</strong>: <code>ScheduleResponse</code>
+                      </li>
+                      <li>
+                        <strong>Purpose</strong>: Backend fetches game schedule
+                        for status sync job.
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code
+                      >GET
+                      https://api-web.nhle.com/v1/gamecenter/{gameId}/landing</code
+                    >
+                    <ul>
+                      <li>
+                        <strong>Parameters</strong>: <code>gameId: String</code>
+                      </li>
+                      <li><strong>Returns</strong>: <code>GameData</code></li>
+                      <li>
+                        <strong>Purpose</strong>: Retrieves detailed game
+                        information including current state for specific game.
+                        Was supposed to bridge to a future implementation of
+                        automatic check for events completion.
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ol>
+          </li>
+        </ul>
+      </li>
+    </ol>
+    <hr />
+    <h3 id="42-databases"><strong>4.2. Databases</strong></h3>
+    <ol>
+      <li>
+        <strong>[MongoDB]</strong>
+        <ul>
+          <li>
+            <strong>Purpose</strong>: Stores users/friends, tickets, challenges,
+            and read-optimized projections.
+          </li>
+        </ul>
+      </li>
+    </ol>
+    <h3 id="43-external-modules"><strong>4.3. External Modules</strong></h3>
+    <ol>
+      <li>
+        <strong>[NHL API]</strong>
+        <ul>
+          <li>
+            <strong>Purpose</strong>: Fetches schedule metadata for ticket and
+            challenge creation.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <strong>[Google authentications]</strong>
+        <ul>
+          <li>
+            <strong>Purpose</strong>: Handles user authentication when signing
+            up/deleting account and logging in/out.
+          </li>
+        </ul>
+      </li>
+    </ol>
+    <h3 id="44-frameworks-and-libraries">
+      <strong>4.4. Frameworks and Libraries</strong>
+    </h3>
+    <ol>
+      <li>
+        <strong>[Express. js]</strong>
+        <ul>
+          <li><strong>Purpose</strong>: Enable web development in Node.js</li>
+          <li>
+            <strong>Reason</strong>: It is the easiest way for us to get started
+            develeping. It helps with routing, requests and responses.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <strong>[Retrofit]</strong>
+        <ul>
+          <li><strong>Purpose</strong>: Make HTTP requests in Android.</li>
+          <li>
+            <strong>Reason</strong>: We need to show API data to the frontend.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <strong>[OkHttp]</strong>
+        <ul>
+          <li><strong>Purpose</strong>: HTTP client.</li>
+          <li>
+            <strong>Reason</strong>: Used together with Retrofit to make http
+            requests.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <strong>[Mongoose]</strong>
+        <ul>
+          <li><strong>Purpose</strong>: Interacting with MongoDB</li>
+          <li>
+            <strong>Reason</strong>: Making it easier to work with the database.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <strong>[<a href="http://Socket.io">Socket.io</a>]</strong>
+        <ul>
+          <li><strong>Purpose</strong>: Live updates support</li>
+          <li>
+            <strong>Reason</strong>: Enables us to implement the live updates
+            when for example user creates and invites another user.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <strong>[Axios]</strong>
+        <ul>
+          <li><strong>Purpose</strong>: HTTP client for backend</li>
+          <li>
+            <strong>Reason</strong>: Enabling us to fetch NHL data every 60
+            seconds from the Typescript backend.
+          </li>
+        </ul>
+      </li>
+    </ol>
+    <h3 id="45-dependencies-diagram">
+      <strong>4.5. Dependencies Diagram</strong>
+    </h3>
+    <p>
+      <img
+        src="/Users/sylvestereley/Documents/GitHub/M2-hockey_prediction-app/documentation/images/high-level-backend-diagram.png"
+        alt="High level backend diagram"
+      />
+    </p>
+    <h3 id="46-use-case-sequence-diagram-5-most-major-use-cases">
+      <strong>4.6. Use Case Sequence Diagram (5 Most Major Use Cases)</strong>
+    </h3>
+    <ol>
+      <li>
+        <a href="#uc1"><strong>[Create Bingo Ticket]</strong></a
+        ><br />
+        <img
+          src="/Users/sylvestereley/Documents/GitHub/M2-hockey_prediction-app/documentation/images/seq-dia-1.png"
+          alt="Create bingo ticket use case sequence diagram"
+        />
+      </li>
+      <li>
+        <a href="#uc2"><strong>[Send Challenge]</strong></a
+        ><br />
+        <img
+          src="/Users/sylvestereley/Documents/GitHub/M2-hockey_prediction-app/documentation/images/seq-dia-2.png"
+          alt="Send Challenge use case sequence diagram"
+        />
+      </li>
+      <li>
+        <a href="#uc3"><strong>[Accept Challenge]</strong></a
+        ><br />
+        <img
+          src="/Users/sylvestereley/Documents/GitHub/M2-hockey_prediction-app/documentation/images/seq-dia-3.png"
+          alt="Accept Challenge use case sequence diagram"
+        />
+      </li>
+      <li>
+        <a href="#uc4"><strong>[View challenge rankings]</strong></a
+        ><br />
+        <img
+          src="/Users/sylvestereley/Documents/GitHub/M2-hockey_prediction-app/documentation/images/seq-dia-4.png"
+          alt="View challenge rankings use case sequence diagram"
+        />
+      </li>
+      <li>
+        <a href="#uc5"><strong>[Send friend request]</strong></a
+        ><br />
+        <img
+          src="/Users/sylvestereley/Documents/GitHub/M2-hockey_prediction-app/documentation/images/seq-dia-5.png"
+          alt="Send friend request use case sequence diagram"
+        />
+      </li>
+    </ol>
+    <h3 id="47-design-and-ways-to-test-non-functional-requirements">
+      <strong>4.7. Design and Ways to Test Non-Functional Requirements</strong>
+    </h3>
+    <ol>
+      <li>
+        <p>
+          <a href="#nfr1"><strong>[Live updates]</strong></a>
+        </p>
+        <ul>
+          <li>
+            <strong>Validation</strong>: We have tested and validated the game
+            sync by logging messages in the backend terminal when a game sync
+            has been run and, if any, which changes has been made to the game
+            status. We have also tested by letting the backend server run in the
+            cloud overnight and when the real live event has finished the users
+            challenges has been correctly moved into the group of finished
+            challenges.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <p>
+          <a href="#nfr2"><strong>[Seamless bingo ticket building]</strong></a>
+        </p>
+        <ul>
+          <li>
+            <strong>Validation</strong>: We have continously tested this as we
+            have been developing as it has involved making a lot of tickets. We
+            have also tested by creating fetching the game events 10 times and
+            logged the time stats in
+            <code>/documentation/logs/fetching_events.txt</code>. This shows no
+            longer than a max avg time of 340.34ms, which is far better than the
+            1 second requirement.
+          </li>
+        </ul>
+      </li>
+    </ol>
+  </body>
+</html>

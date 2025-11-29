@@ -107,6 +107,12 @@ And some lines in index.ts and database.ts are not covered as well, as you canno
 
 ### 4.2. Tests
 
+**Setup instructions**
+
+1. Sign in to the app using both test gmail accounts found in frontend/app/src/androidTest/java/com/cpen321/usermanagement/E2ETests/E2Etests.kt 
+2. Ensure both accounts have no pre-existing friends or bingo tickets. If there are, delete them.
+3. Press the button in E2Etests.kt to run 'E2Etests'
+
 - **Friends feature tests**
 
   - **Expected Behaviors:**
